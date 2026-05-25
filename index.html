@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=no">
     <title>Manga Prompt Builder for Gemini</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#4a90e2">
@@ -18,162 +18,209 @@
             --text-color: #f0f0f0;
             --border-color: #444444;
             --font-family: "HG丸ゴシックM-PRO", "HG Maru Gothic M-PRO", "Hiragino Maru Gothic ProN", "Yu Gothic", sans-serif;
-            --font-size: 14px; /* 13pt基準の柔らかな大きめ視認性 */
+            --font-size: 15px; /* スマホ画面での視認性を考慮し標準より少し大きめをキープ */
         }
 
+        /* スマホ向けにスクロールバーのバウンスを抑制、タップハイライトをクリア */
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
             font-family: var(--font-family);
             font-size: var(--font-size);
-            line-height: 1.6;
+            line-height: 1.5;
             margin: 0;
-            padding: 20px;
+            padding: 12px;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .container {
+            width: 100%;
             max-width: 900px;
             margin: 0 auto;
             background-color: var(--container-bg);
-            padding: 25px;
-            border-radius: 10px;
+            padding: 16px;
+            border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            box-sizing: border-box;
         }
 
         h1 {
             text-align: center;
-            font-size: 1.6rem;
-            margin-bottom: 25px;
+            font-size: 1.35rem;
+            margin-top: 5px;
+            margin-bottom: 20px;
             color: var(--accent-color);
             border-bottom: 2px solid var(--border-color);
-            padding-bottom: 10px;
+            padding-bottom: 8px;
         }
 
         fieldset {
             border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 15px 20px;
-            margin-bottom: 20px;
+            border-radius: 8px;
+            padding: 12px 15px;
+            margin-bottom: 16px;
             background-color: rgba(255,255,255,0.02);
+            box-sizing: border-box;
         }
 
         legend {
             font-weight: bold;
             color: var(--accent-color);
-            padding: 0 10px;
+            padding: 0 8px;
+            font-size: 0.95rem;
         }
 
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 14px;
             display: flex;
             flex-direction: column;
         }
 
+        /* スマホ縦スクロールに特化させ、2列配置を完全な1列配置へ最適化 */
         .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
         }
 
         label {
-            margin-bottom: 5px;
+            margin-bottom: 6px;
             font-weight: bold;
+            font-size: 0.9rem;
         }
 
+        /* スマホの親指でのタップ、入力しやすさを担保する大きめのインプット領域（高さ44px以上） */
         input[type="text"], select, textarea {
             background-color: #383838;
             border: 1px solid var(--border-color);
             color: var(--text-color);
-            padding: 10px;
-            border-radius: 4px;
+            padding: 12px;
+            border-radius: 6px;
             font-family: var(--font-family);
             font-size: 1rem;
             outline: none;
             box-sizing: border-box;
+            width: 100%;
+            -webkit-appearance: none; /* iOS特有のインプット内グラデーションを抑止 */
+            appearance: none;
+        }
+
+        /* selectコントロールのスマホ向け矢印デザイン調整 */
+        select {
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23f0f0f0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 16px;
+            padding-right: 40px;
         }
 
         input[type="text"]:focus, select:focus, textarea:focus {
             border-color: var(--accent-color);
+            background-color: #404040;
         }
 
         textarea {
             resize: vertical;
         }
 
+        /* チェックボックスをスマホの指で誤タップしづらいよう、余裕を持ったグリッドに配置 */
         .checkbox-group {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 10px;
-            padding-top: 5px;
+            grid-template-columns: 1fr; /* 1列に並べてスクロール選択を容易に */
+            gap: 8px;
+            padding-top: 6px;
         }
 
+        /* タッチ領域を拡張したラベルデザイン */
         .checkbox-label {
             display: flex;
             align-items: center;
             cursor: pointer;
             user-select: none;
+            background-color: #333333;
+            padding: 10px 12px;
+            border-radius: 6px;
+            border: 1px solid transparent;
+        }
+        .checkbox-label:active {
+            background-color: #3e3e3e;
         }
 
         .checkbox-label input {
-            margin-right: 8px;
-            width: 16px;
-            height: 16px;
+            margin-right: 12px;
+            width: 20px;
+            height: 20px;
             cursor: pointer;
         }
 
-        /* 補足指示用タグボタン */
+        /* 補足指示用タグボタンエリア（横スクロール可能にしてボタンが潰れるのを防ぐ） */
         .tag-buttons {
             margin-bottom: 8px;
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .tag-buttons::-webkit-scrollbar {
+            display: none; /* スクロールバー非表示 */
         }
         .tag-btn {
             background-color: #444;
             color: #fff;
             border: none;
-            padding: 4px 10px;
-            margin-right: 5px;
-            border-radius: 4px;
+            padding: 8px 14px;
+            border-radius: 6px;
             cursor: pointer;
             font-family: var(--font-family);
             font-size: 0.85rem;
+            white-space: nowrap; /* 折り返しを防止 */
+            flex-shrink: 0;
         }
-        .tag-btn:hover {
+        .tag-btn:active {
             background-color: var(--accent-color);
         }
 
-        /* 自動保存履歴管理エリア */
+        /* 自動保存履歴管理エリア（スマホ向けに横並びから2段構成に再レイアウト） */
         .history-area {
             display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 20px;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 16px;
             background-color: #222;
-            padding: 10px;
-            border-radius: 6px;
+            padding: 12px;
+            border-radius: 8px;
         }
-        .history-area select {
-            flex-grow: 1;
+        .history-controls {
+            display: flex;
+            gap: 6px;
+            width: 100%;
+        }
+        .history-controls button {
+            flex: 1;
+            padding: 10px 4px;
+            font-size: 0.85rem;
         }
 
+        /* アクションボタン（最下部の生成ボタンを大きく押しやすく） */
         .actions {
-            display: flex;
-            gap: 15px;
-            margin-top: 25px;
+            margin-top: 20px;
         }
 
         button.main-btn {
-            flex-grow: 1;
+            width: 100%;
             background-color: var(--accent-color);
             color: white;
             border: none;
-            padding: 14px;
+            padding: 15px;
             font-size: 1.1rem;
             font-weight: bold;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
             font-family: var(--font-family);
-            transition: background 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
         }
-        button.main-btn:hover {
+        button.main-btn:active {
             background-color: #357abd;
         }
 
@@ -181,63 +228,80 @@
             background-color: #555;
             color: white;
             border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
+            padding: 10px 12px;
+            border-radius: 6px;
             cursor: pointer;
             font-family: var(--font-family);
+            font-size: 0.9rem;
         }
-        button.sub-btn:hover {
+        button.sub-btn:active {
             background-color: #666;
         }
         button.danger-btn {
             background-color: #962d2d;
         }
-        button.danger-btn:hover {
+        button.danger-btn:active {
             background-color: #b33636;
         }
 
-        /* 出力モーダル */
+        /* 出力モーダル（スマートフォン画面全域にフィットするように調整） */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7);
+            background: rgba(0,0,0,0.8);
             display: none;
             align-items: center;
             justify-content: center;
             z-index: 1000;
+            padding: 10px;
+            box-sizing: border-box;
         }
         .modal-box {
             background-color: var(--container-bg);
-            width: 90%;
-            max-width: 750px;
-            padding: 20px;
-            border-radius: 8px;
+            width: 100%;
+            max-height: 95vh;
+            padding: 16px;
+            border-radius: 10px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
         }
         .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
+            flex-shrink: 0;
         }
         .modal-title {
             font-weight: bold;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             color: var(--accent-color);
+        }
+        .modal-body {
+            flex-grow: 1;
+            overflow-y: auto;
+            margin-bottom: 12px;
         }
         .modal-body textarea {
             width: 100%;
-            height: 400px;
+            height: 60vh; /* スマホ画面の縦サイズに対して最適化 */
             background-color: #1e1e1e;
-            color: #00ff66; /* ターミナル風視認性エフェクト */
+            color: #00ff66;
             font-family: Consolas, Monaco, var(--font-family);
-            font-size: 0.95rem;
+            font-size: 0.9rem;
+            padding: 10px;
         }
         .modal-footer {
-            margin-top: 15px;
             display: flex;
-            justify-content: flex-end;
             gap: 10px;
+            flex-shrink: 0;
+        }
+        .modal-footer button {
+            flex: 1;
+            padding: 12px;
+            font-size: 1rem;
         }
     </style>
 </head>
@@ -247,16 +311,20 @@
     <h1>Manga Prompt Builder for Gemini</h1>
 
     <div class="history-area">
-        <label for="historySelect">自動保存履歴:</label>
-        <select id="historySelect">
-            <option value="">-- 履歴を選択 --</option>
-        </select>
-        <button type="button" class="sub-btn" onclick="loadHistory()">復元</button>
-        <button type="button" class="sub-btn" onclick="renameHistory()">名前変更</button>
-        <button type="button" class="sub-btn danger-btn" onclick="deleteHistory()">削除</button>
+        <div class="form-group" style="margin-bottom: 6px;">
+            <label for="historySelect">自動保存履歴:</label>
+            <select id="historySelect">
+                <option value="">-- 履歴を選択 --</option>
+            </select>
+        </div>
+        <div class="history-controls">
+            <button type="button" class="sub-btn" onclick="loadHistory()">復元</button>
+            <button type="button" class="sub-btn" onclick="renameHistory()">名前変更</button>
+            <button type="button" class="sub-btn danger-btn" onclick="deleteHistory()">削除</button>
+        </div>
     </div>
 
-    <form id="promptForm">
+    <form id="promptForm" onsubmit="return false;">
         <fieldset>
             <legend>★ 全体共通設定 (一貫性を保つ項目)</legend>
             
@@ -323,7 +391,7 @@
 
             <div class="form-group">
                 <label for="dialogues_text">11. DIALOGUES — セリフ・会話 (改行コードLF統一):</label>
-                <textarea id="dialogues_text" rows="8" placeholder="「ぉおっと、出番だ」&#10;「あれ！よくみえねえ！?」&#10;「まーいいかあ…」&#10;「0点…」"></textarea>
+                <textarea id="dialogues_text" rows="6" placeholder="「ぉおっと、出番だ」&#10;「あれ！よくみえねえ！?」&#10;「まーいいかあ…」&#10;「0点…」"></textarea>
             </div>
         </fieldset>
 
@@ -337,7 +405,7 @@
     <div class="modal-box">
         <div class="modal-header">
             <div class="modal-title">生成結果・Gemini用指示書出力</div>
-            <button type="button" class="sub-btn" onclick="closeModal()">✕</button>
+            <button type="button" class="sub-btn" style="padding: 6px 12px;" onclick="closeModal()">✕</button>
         </div>
         <div class="modal-body">
             <textarea id="outputText" readonly></textarea>
@@ -428,7 +496,6 @@
         });
     }
 
-    // チェックボックス一括設定
     function initCheckboxes(containerId, list, prefix) {
         const container = document.getElementById(containerId);
         list.forEach((item, index) => {
@@ -452,7 +519,7 @@
         textarea.focus();
     }
 
-    // Gemini用プロンプト生成
+    // Gemini用指示書 プロンプト生成コアロジック
     function generateGeminiPrompt() {
         const subject = document.getElementById('subject_custom').value.trim();
         if (!subject) {
@@ -474,7 +541,7 @@
 
         const notes = document.getElementById('additional_notes').value;
         
-        // 改行コードを一貫してLFに統一
+        // 改行コードを一貫してLFに統一して処理
         let dialogues = document.getElementById('dialogues_text').value.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
         let p = "あなたはプロの漫画原作者であり、画像生成AIの高度なプロンプトエンジニアです。\n";
@@ -522,7 +589,7 @@
     }
 
     // --------------------------------------------------------
-    // LocalStorage 履歴管理ロジック
+    // LocalStorageを利用した履歴管理
     // --------------------------------------------------------
     function getHistory() {
         const hist = localStorage.getItem('manga_prompt_history');
@@ -651,6 +718,9 @@
         }
     }
 
+    // --------------------------------------------------------
+    // モーダル・クリップボード制御
+    // --------------------------------------------------------
     function openModal() {
         document.getElementById('outputModal').style.display = 'flex';
     }
