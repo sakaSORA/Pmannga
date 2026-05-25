@@ -1,0 +1,17 @@
+{
+  "short_name": "MangaPrompt",
+  "name": "Manga Prompt Builder for Gemini",
+  "icons": [
+    {
+      "src": "icon.png",
+      "type": "image/png",
+      "sizes": "192x192 512x512",
+      "purpose": "any"
+    }
+  ],
+  "start_url": "./index.html",
+  "background_color": "#1e1e1e",
+  "theme_color": "#4a90e2",
+  "display": "standalone",
+  "orientation": "portrait"
+}
