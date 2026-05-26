@@ -728,10 +728,19 @@
         document.getElementById('outputModal').style.display = 'none';
     }
     function copyToClipboard() {
-        const txt = document.getElementById('outputText');
-        txt.select();
-        document.execCommand('copy');
-        alert("クリップボードにコピーしました！");
+        const txt = document.getElementById('outputText').value;
+        
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(txt)
+                .then(() => alert("クリップボードにコピーしました！"))
+                .catch(err => alert("コピーに失敗しました: " + err));
+        } else {
+            // フォールバック（古いブラウザ用）
+            const textArea = document.getElementById('outputText');
+            textArea.select();
+            document.execCommand('copy');
+            alert("クリップボードにコピーしました！");
+        }
     }
 
     // --------------------------------------------------------

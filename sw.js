@@ -1,8 +1,9 @@
-const CACHE_NAME = 'manga-prompt-pwa-v2';
+const CACHE_NAME = 'manga-prompt-pwa-v3';
 const ASSETS = [
   './',
   './index.html',
-  './manifest.json'
+  './manifest.json',
+  './icon.png'
 ];
 
 // インストール時にコアファイルをキャッシュ
