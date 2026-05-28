@@ -329,28 +329,28 @@
             <legend>★ 全体共通設定 (一貫性を保つ項目)</legend>
             
             <div class="form-group">
-                <label for="subject_custom">01. SUBJECT — 対象・主人公 (自由入力):</label>
-                <input type="text" id="subject_custom" placeholder="例: 熊っぽいゆるキャラの自衛官" required>
+                <label for="subject_custom">対象・主人公 (自由入力):</label>
+                <input type="text" id="subject_custom" placeholder="例: A熊っぽいゆるキャラ Bヒロイン" required>
             </div>
 
             <div class="form-row">
                 <div class="form-group">
-                    <label for="manga_style">02. 画風:</label>
+                    <label for="manga_style">画風:</label>
                     <select id="manga_style"></select>
                 </div>
                 <div class="form-group">
-                    <label for="color_palette">07. 配色 (プルダウン選択):</label>
+                    <label for="color_palette">配色 (プルダウン選択):</label>
                     <select id="color_palette"></select>
                 </div>
             </div>
 
             <div class="form-row">
                 <div class="form-group">
-                    <label for="char_emphasis">08. キャラ強調:</label>
+                    <label for="char_emphasis">キャラ強調:</label>
                     <select id="char_emphasis"></select>
                 </div>
                 <div class="form-group">
-                    <label for="final_mood">09. 仕上がり:</label>
+                    <label for="final_mood">仕上がり:</label>
                     <select id="final_mood"></select>
                 </div>
             </div>
@@ -360,27 +360,27 @@
             <legend>📖 ページ構成データ</legend>
 
             <div class="form-group">
-                <label for="panel_layout">03. PANEL LAYOUT — コマ構成:</label>
+                <label for="panel_layout">コマ構成:</label>
                 <select id="panel_layout"></select>
             </div>
 
             <div class="form-group">
-                <label for="story_theme">04. STORY THEME — ストーリーテーマ:</label>
+                <label for="story_theme">ストーリーテーマ:</label>
                 <select id="story_theme"></select>
             </div>
 
             <div class="form-group">
-                <label>05. VISUAL EFFECTS — 演出 (複数選択可):</label>
+                <label>演出 (複数選択可):</label>
                 <div class="checkbox-group" id="vfx_container"></div>
             </div>
 
             <div class="form-group">
-                <label>06. TEXTURE & DECORATION — 質感・装飾 (複数選択可):</label>
+                <label>質感・装飾 (複数選択可):</label>
                 <div class="checkbox-group" id="texture_container"></div>
             </div>
 
             <div class="form-group">
-                <label for="additional_notes">10. ADDITIONAL NOTES — 補足・追加指示:</label>
+                <label for="additional_notes">補足・追加指示:</label>
                 <div class="tag-buttons">
                     <button type="button" class="tag-btn" onclick="insertTag(' --ar 2:3')">[縦長 --ar 2:3]</button>
                     <button type="button" class="tag-btn" onclick="insertTag(' --ar 3:2')">[横長 --ar 3:2]</button>
@@ -390,13 +390,13 @@
             </div>
 
             <div class="form-group">
-                <label for="dialogues_text">11. DIALOGUES — セリフ・会話 (改行コードLF統一):</label>
+                <label for="dialogues_text">セリフ・会話 (改行コードLF統一):</label>
                 <textarea id="dialogues_text" rows="6" placeholder="「ぉおっと、出番だ」&#10;「あれ！よくみえねえ！?」&#10;「まーいいかあ…」&#10;「0点…」"></textarea>
             </div>
         </fieldset>
 
         <div class="actions">
-            <button type="button" class="main-btn" onclick="generateGeminiPrompt()">Gemini用指示書を生成</button>
+            <button type="button" class="main-btn" onclick="generateGeminiPrompt()">AI用指示書を生成</button>
         </div>
     </form>
 </div>
@@ -404,7 +404,7 @@
 <div class="modal-overlay" id="outputModal">
     <div class="modal-box">
         <div class="modal-header">
-            <div class="modal-title">生成結果・Gemini用指示書出力</div>
+            <div class="modal-title">生成結果・AI用指示書出力</div>
             <button type="button" class="sub-btn" style="padding: 6px 12px;" onclick="closeModal()">✕</button>
         </div>
         <div class="modal-body">
@@ -419,51 +419,53 @@
 
 <script>
     // --------------------------------------------------------
-    // データ定義群
+    // データ定義群（メニュー表示を分かりやすい日本語・カタカナに統一）
     // --------------------------------------------------------
     const DATA_STYLE = {
-        "フルカラー漫画 (Full Color)": "full color manga style",
-        "白黒漫画 (B&W Manga)": "black and white manga style, monochrome",
-        "少年漫画風": "shonen manga style, action oriented",
-        "少女漫画風": "shoujo manga style, delicate lines, emotional",
-        "青年漫画風": "seinen manga style, mature, detailed",
-        "アメコミ風": "american comic book style, bold outlines",
-        "グラフィティ風 (Graffiti)": "graffiti manga style, street art influence",
-        "雑誌エディトリアル風 (Editorial)": "editorial manga style, magazine layout",
-        "サイバーパンク風 (Cyberpunk)": "cyberpunk manga style, futuristic, high tech",
-        "縦読みウェブトゥーン (Webtoon)": "webtoon style, vertical scrolling format, vibrant colors",
-        "レトロアニメ風 (Retro 80s)": "retro 80s anime manga style, vintage aesthetic"
+        "フルカラー漫画": "full color manga style",
+        "白黒モノクロ漫画": "black and white manga style, monochrome",
+        "少年漫画風（アクション・熱血）": "shonen manga style, action oriented",
+        "少女漫画風（繊細・感情描写）": "shoujo manga style, delicate lines, emotional",
+        "青年漫画風（リアル・高解像度）": "seinen manga style, mature, detailed",
+        "アメコミ風（ポップ・太線）": "american comic book style, bold outlines",
+        "グラフィティアート風": "graffiti manga style, street art influence",
+        "雑誌エディトリアル風": "editorial manga style, magazine layout",
+        "サイバーパンク風（SF・近未来）": "cyberpunk manga style, futuristic, high tech",
+        "縦読みウェブトゥーン風": "webtoon style, vertical scrolling format, vibrant colors",
+        "レトロアニメ風（80年代ビンテージ）": "retro 80s anime manga style, vintage aesthetic"
     };
     const DATA_COLOR = {
-        "Vibrant (鮮やか)": "vibrant color palette, highly saturated",
-        "Dark Moody (重厚・暗め)": "dark moody atmosphere, low key lighting",
-        "Neon Cyberpunk (ネオン発光)": "neon cyberpunk color palette, glowing lights",
-        "Warm Earthy (暖色・自然)": "warm earthy color tones, natural",
-        "Cool Editorial (寒色・雑誌風)": "cool editorial color grading, muted blues and greys",
-        "モノクロ＋アクセント1色": "monochrome with a single bright accent color",
-        "Pastel Soft (パステル・柔らか)": "soft pastel color palette, gentle lighting",
-        "Bold Primary Flat (原色・フラット)": "bold primary colors, flat shading",
-        "Retro Risograph (レトロ印刷風)": "retro risograph printing effect, offset colors"
+        "ビブラント（鮮やか・高彩度）": "vibrant color palette, highly saturated",
+        "ダークムーディー（重厚・暗め）": "dark moody atmosphere, low key lighting",
+        "ネオンサイバーパンク（発光）": "neon cyberpunk color palette, glowing lights",
+        "ウォームアースカラー（暖色・自然）": "warm earthy color tones, natural",
+        "クールエディトリアル（寒色・雑誌風）": "cool editorial color grading, muted blues and greys",
+        "モノクロ＋アクセントカラー1色": "monochrome with a single bright accent color",
+        "パステルソフト（淡い・柔らか）": "soft pastel color palette, gentle lighting",
+        "ボールドプライマリー（原色・フラット）": "bold primary colors, flat shading",
+        "レトロリソグラフ（印刷ズレ風）": "retro risograph printing effect, offset colors"
     };
     const DATA_LAYOUT = {
-        "3コマ": "3-panel comic layout",
-        "4コマ(起承転結・失敗談向)": "4-panel comic layout, yonkoma",
-        "5〜7コマ": "5 to 7 panels comic page layout",
-        "8〜10コマ(解説・手順向)": "8 to 10 panels comic page layout, dense layout",
-        "大ゴマ＋小コマ": "dynamic panel layout with one large splash panel and smaller secondary panels"
+        "3コマ配置（変則レイアウト）": "3-panel comic layout",
+        "4コマ構成（起承転結・定番）": "4-panel comic layout, yonkoma",
+        "5〜7コマ配置（標準ストーリー構成）": "5 to 7 panels comic page layout",
+        "8〜10コマ配置（高密度・解説手順向け）": "8 to 10 panels comic page layout, dense layout",
+        "大ゴマ ＋ 小コマ（メリハリ重視）": "dynamic panel layout with one large splash panel and smaller secondary panels"
     };
     const DATA_THEME = {
-        "キャラ紹介": "character introduction scene",
-        "覚醒・変身": "character awakening, transformation sequence",
-        "アクション・決闘": "intense action scene, duel",
-        "葛藤→発見": "internal conflict leading to a sudden realization",
-        "Before→After変容": "before and after transformation, stark contrast",
-        "問題→発見→解決": "problem-solving sequence, discovery and resolution",
-        "コメディ失敗あるある": "slapstick comedy, relatable failure, humorous situation",
-        "PR・プロモーション": "promotional product showcase sequence",
-        "都市的クリエイター表現": "urban creator lifestyle, artistic expression",
-        "データ洞察の発見": "discovering insights from data, analytical breakthrough"
+        "キャラクター紹介": "character introduction scene",
+        "覚醒・変身シーン": "character awakening, transformation sequence",
+        "アクション・決闘シーン": "intense action scene, duel",
+        "葛藤からひらめきへの展開": "internal conflict leading to a sudden realization",
+        "ビフォー・アフターの大変化": "before and after transformation, stark contrast",
+        "問題発生から発見・解決まで": "problem-solving sequence, discovery and resolution",
+        "コメディ（あるある失敗談）": "slapstick comedy, relatable failure, humorous situation",
+        "PR・プロモーション演出": "promotional product showcase sequence",
+        "アーバンスタイル・クリエイター表現": "urban creator lifestyle, artistic expression",
+        "データ分析とインサイトの発見": "discovering insights from data, analytical breakthrough"
     };
+
+    // 演出・質感等の配列データ（チェックボックス用も分かりやすい日本語表現に統一）
     const DATA_VFX = ["映画的ストーリーテリング (Cinematic)", "ダイナミックな構図 (Dramatic Perspective)", "スピード線 (Speed Lines)", "インパクトフレーム (Impact Frames)", "データ表示 (Data Overlays)", "UI/HUD表示 (UI/HUD Overlays)"];
     const DATA_TEXTURE = ["英語擬音", "手書き吹き出し", "日本語キャプション", "ナレーションボックス", "網点ハーフトーン", "インク飛沫", "ラフスケッチ線", "コマ枠", "ガター(コマ間白枠)", "日本語のみの吹き出し"];
     const DATA_EMPHASIS = ["個性・オーラ", "クリエイティブ哲学", "強さ・決意", "知性・洞察力", "ユーモア", "繊細さ", "リーダーシップ", "反骨精神", "製品価値・ユーザー変容"];
@@ -478,7 +480,7 @@
         initSelectOptions('panel_layout', Object.keys(DATA_LAYOUT));
         initSelectOptions('story_theme', Object.keys(DATA_THEME));
         
-        document.getElementById('panel_layout').value = "4コマ(起承転結・失敗談向)";
+        document.getElementById('panel_layout').value = "4コマ構成（起承転結・定番）";
 
         initCheckboxes('vfx_container', DATA_VFX, 'vfx');
         initCheckboxes('texture_container', DATA_TEXTURE, 'tex');
@@ -527,12 +529,21 @@
             return;
         }
 
-        const style = document.getElementById('manga_style').value;
-        const color = document.getElementById('color_palette').value;
+        // 内部の英語定義へ変換して割り当て
+        const styleKey = document.getElementById('manga_style').value;
+        const style = DATA_STYLE[styleKey] || styleKey;
+
+        const colorKey = document.getElementById('color_palette').value;
+        const color = DATA_COLOR[colorKey] || colorKey;
+
         const emphasis = document.getElementById('char_emphasis').value;
         const mood = document.getElementById('final_mood').value;
-        const layout = document.getElementById('panel_layout').value;
-        const theme = document.getElementById('story_theme').value;
+
+        const layoutKey = document.getElementById('panel_layout').value;
+        const layout = DATA_LAYOUT[layoutKey] || layoutKey;
+
+        const themeKey = document.getElementById('story_theme').value;
+        const theme = DATA_THEME[themeKey] || themeKey;
 
         const vfxList = [];
         document.querySelectorAll('#vfx_container input:checked').forEach(el => vfxList.push(el.value));
