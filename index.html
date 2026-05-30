@@ -10,6 +10,11 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
     <style>
+        /* すべての要素でサイズ計算を枠内（border-box）に統一し、はみ出しを根本から防止 */
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
         /* HG丸ゴシックM-PROライクな柔らかな視認性とダークテーマの融合 */
         :root {
             --bg-color: #1e1e1e;
@@ -34,6 +39,7 @@
             padding: 12px;
             -webkit-tap-highlight-color: transparent;
             transition: background-color 0.3s ease;
+            overflow-x: hidden; /* 横スクロールの発生を完全に禁止 */
         }
 
         .container {
@@ -44,7 +50,6 @@
             padding: 16px;
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            box-sizing: border-box;
         }
 
         h1 {
@@ -64,8 +69,8 @@
             padding: 12px 15px;
             margin-bottom: 16px;
             background-color: rgba(255,255,255,0.02);
-            box-sizing: border-box;
-            min-width: 0; /* スマホ画面外への横はみ出しを防ぐための決定的な修正 */
+            min-width: 0; /* ブラウザ標準の最小幅制限を解除し、スマホ画面幅に強制フィットさせる最重要指定 */
+            width: 100%;
         }
 
         legend {
@@ -81,7 +86,6 @@
             display: flex;
             flex-direction: column;
             width: 100%;
-            box-sizing: border-box;
         }
 
         /* スマホ縦スクロールに特化させ、2列配置を完全な1列配置へ最適化 */
@@ -108,7 +112,6 @@
             font-family: var(--font-family);
             font-size: 1rem;
             outline: none;
-            box-sizing: border-box;
             width: 100%;
             -webkit-appearance: none; /* iOS特有のインプット内グラデーションを抑止 */
             appearance: none;
@@ -139,7 +142,6 @@
             gap: 8px;
             padding-top: 6px;
             width: 100%;
-            box-sizing: border-box;
         }
 
         /* タッチ領域を拡張したラベルデザイン */
@@ -152,8 +154,8 @@
             padding: 10px 12px;
             border-radius: 6px;
             border: 1px solid transparent;
+            width: 100%;
             word-break: break-all; /* 長い子供向けテキストもスマホ画面内で安全に折り返す修正 */
-            box-sizing: border-box;
         }
         .checkbox-label:active {
             background-color: #3e3e3e;
@@ -164,7 +166,7 @@
             width: 20px;
             height: 20px;
             cursor: pointer;
-            flex-shrink: 0; /* チェックボックス自体が潰れるのを防ぐ */
+            flex-shrink: 0; /* チェックボックス自体が横幅縮小で潰れるのを完全に防ぐ */
         }
 
         /* 補足指示用タグボタンエリア（横スクロール可能にしてボタンが潰れるのを防ぐ） */
@@ -206,7 +208,6 @@
             padding: 12px;
             border-radius: 8px;
             width: 100%;
-            box-sizing: border-box;
         }
         .history-controls {
             display: flex;
@@ -273,7 +274,6 @@
             justify-content: center;
             z-index: 1000;
             padding: 10px;
-            box-sizing: border-box;
         }
         .modal-box {
             background-color: var(--container-bg);
@@ -284,7 +284,6 @@
             box-shadow: 0 4px 20px rgba(0,0,0,0.6);
             display: flex;
             flex-direction: column;
-            box-sizing: border-box;
         }
         .modal-header {
             display: flex;
@@ -379,7 +378,7 @@
                     <select id="char_emphasis"></select>
                 </div>
                 <div class="form-group">
-                    <label for="final_mood">全体のふんいにき：</label>
+                    <label for="final_mood">全体のふんいき：</label>
                     <select id="final_mood"></select>
                 </div>
             </div>
@@ -484,7 +483,7 @@
             "colors": {
                 "パステルソフト（マカロンみたいな可愛い色）": "soft pastel color palette, gentle pink and mint lighting",
                 "ドリーミー（ゆめかわ・グラデーション）": "dreamy magical color palette, purple and pink gradients",
-                "ウォーム（ぬくもりのある自然な色）": "warm earthy color tones, cozy and natural",
+                "ウォーム（ぬくもりのある自然な色）": "warm earthy color tones, natural",
                 "ビビッド（お洋服みたいにおしゃれで鮮やか）": "fashionable vivid color palette, stylish tones"
             },
             "themes": {
@@ -690,7 +689,7 @@
         }
 
         const now = new Date();
-        const timestamp = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+        const timestamp = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')} ${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
         
         let displaySubject = subjectStr.length > 20 ? subjectStr.substring(0, 20) + "..." : subjectStr;
         const title = `${timestamp} - ${displaySubject}`;
