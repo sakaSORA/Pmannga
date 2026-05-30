@@ -20,7 +20,7 @@
             --text-color: #f0f0f0;
             --border-color: #444444;
             --font-family: "HG丸ゴシックM-PRO", "HG Maru Gothic M-PRO", "Hiragino Maru Gothic ProN", "Yu Gothic", sans-serif;
-            --font-size: 15px; /* スマホ画面での視認性を考慮し標準より少し大きめをキープ */
+            --font-size: 13pt; /* 共通ルールに従い、一貫性を持たせた基準サイズ13pt */
         }
 
         /* スマホ向けにスクロールバーのバウンスを抑制、タップハイライトをクリア */
@@ -65,6 +65,7 @@
             margin-bottom: 16px;
             background-color: rgba(255,255,255,0.02);
             box-sizing: border-box;
+            min-width: 0; /* スマホ画面外への横はみ出しを防ぐための決定的な修正 */
         }
 
         legend {
@@ -79,6 +80,8 @@
             margin-bottom: 14px;
             display: flex;
             flex-direction: column;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         /* スマホ縦スクロールに特化させ、2列配置を完全な1列配置へ最適化 */
@@ -86,6 +89,7 @@
             display: flex;
             flex-direction: column;
             gap: 0;
+            width: 100%;
         }
 
         label {
@@ -134,6 +138,8 @@
             grid-template-columns: 1fr; /* 1列に並べてスクロール選択を容易に */
             gap: 8px;
             padding-top: 6px;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         /* タッチ領域を拡張したラベルデザイン */
@@ -146,6 +152,8 @@
             padding: 10px 12px;
             border-radius: 6px;
             border: 1px solid transparent;
+            word-break: break-all; /* 長い子供向けテキストもスマホ画面内で安全に折り返す修正 */
+            box-sizing: border-box;
         }
         .checkbox-label:active {
             background-color: #3e3e3e;
@@ -156,6 +164,7 @@
             width: 20px;
             height: 20px;
             cursor: pointer;
+            flex-shrink: 0; /* チェックボックス自体が潰れるのを防ぐ */
         }
 
         /* 補足指示用タグボタンエリア（横スクロール可能にしてボタンが潰れるのを防ぐ） */
@@ -166,6 +175,7 @@
             overflow-x: auto;
             padding-bottom: 4px;
             -webkit-overflow-scrolling: touch;
+            width: 100%;
         }
         .tag-buttons::-webkit-scrollbar {
             display: none; /* スクロールバー非表示 */
@@ -195,6 +205,8 @@
             background-color: #222;
             padding: 12px;
             border-radius: 8px;
+            width: 100%;
+            box-sizing: border-box;
         }
         .history-controls {
             display: flex;
@@ -210,6 +222,7 @@
         /* アクションボタン（最下部の生成ボタンを大きく押しやすく） */
         .actions {
             margin-top: 20px;
+            width: 100%;
         }
 
         button.main-btn {
@@ -290,6 +303,7 @@
             flex-grow: 1;
             overflow-y: auto;
             margin-bottom: 12px;
+            width: 100%;
         }
         .modal-body textarea {
             width: 100%;
@@ -345,7 +359,7 @@
 
             <div class="form-group">
                 <label for="subject_custom">まんがの主人公（だれが でてくる？）：</label>
-                <input type="text" id="subject_custom" placeholder="例: 炎をあやつる少年、おしゃべりな黒ネコ" required>
+                <input type="text" id="subject_custom" placeholder="例：炎をあやつる少年、おしゃべりな黒ネコ" required>
             </div>
 
             <div class="form-row">
@@ -365,7 +379,7 @@
                     <select id="char_emphasis"></select>
                 </div>
                 <div class="form-group">
-                    <label for="final_mood">全体のふんいき：</label>
+                    <label for="final_mood">全体のふんいにき：</label>
                     <select id="final_mood"></select>
                 </div>
             </div>
@@ -385,12 +399,12 @@
             </div>
 
             <div class="form-group">
-                <label>画面のパワー（効果・エフェクト） ※いくつ選んでもOK：</label>
+                <label>画面のパワー（効果・エフェクト）※いくつ選んでもOK：</label>
                 <div class="checkbox-group" id="vfx_container"></div>
             </div>
 
             <div class="form-group">
-                <label>まんがの飾り（文字やワク） ※いくつ選んでもOK：</label>
+                <label>まんがの飾り（文字やワク）※いくつ選んでもOK：</label>
                 <div class="checkbox-group" id="texture_container"></div>
             </div>
 
