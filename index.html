@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=no">
-    <title>まんがプロンプトビルダー for Gemini</title>
+    <title>まんがプロンプトビルダー for AI</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#4a90e2">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -328,13 +328,13 @@
 <body>
 
 <div class="container">
-    <h1 id="mainTitle">まんがプロンプトビルダー for Gemini</h1>
+    <h1 id="mainTitle">まんがプロンプトビルダー for AI</h1>
 
     <div class="history-area">
         <div class="form-group" style="margin-bottom: 6px;">
-            <label for="historySelect">じどう保存された れきし:</label>
+            <label for="historySelect">じどう保存:</label>
             <select id="historySelect">
-                <option value="">-- もどしたい時につかう --</option>
+                <option value="">-- もどしたい時 --</option>
             </select>
         </div>
         <div class="history-controls">
@@ -346,7 +346,7 @@
 
     <form id="promptForm" onsubmit="return false;">
         <fieldset>
-            <legend id="legendCommon">★ まんがの基本設定（どんな世界にする？）</legend>
+            <legend id="legendCommon">★ 基本設定（どんな世界にする？）</legend>
             
             <div class="form-group">
                 <label for="manga_type">つくりたい まんがのタイプ：</label>
@@ -418,8 +418,8 @@
             </div>
 
             <div class="form-group">
-                <label for="dialogues_text">セリフ・キャラクターの言葉（改行してね）：</label>
-                <textarea id="dialogues_text" rows="6" placeholder="「よしっ、いくぞ！」&#10;「うわっ！前がみえないぞ！？」&#10;「なんとかなるさ！」&#10;「大せいこう！」"></textarea>
+                <label for="dialogues_text">場所や場面、セリフ（改行してね）：</label>
+                <textarea id="dialogues_text" rows="6" placeholder="ひるやすみの学校の校庭&#10;「よしっ、いくぞ！」&#10;「うわっ！前がみえないぞ！？」&#10;「なんとかなるさ！」&#10;「大せいこう！」"></textarea>
             </div>
         </fieldset>
 
@@ -456,7 +456,9 @@
                 "迫力満載！白黒（モノクロ）まんが": "black and white manga style, monochrome, high contrast",
                 "近未来サイバー（SF・ロボット）": "cyberpunk manga style, futuristic, high tech",
                 "アメコミ風（ポップ・太い線）": "american comic book style, bold outlines, bright colors",
-                "ゲーム・ドット絵風": "8bit pixel art style, retro video game aesthetic"
+                "ゲーム・ドット絵風": "8bit pixel art style, retro video game aesthetic",
+                "ぼくの絵日記風（ほのぼの・手書き）": "illustrated diary style, cute hand-drawn sketch, naive art, simple child's drawing, heartwarming",
+                "ノートの落書き風（かんたん線画）": "notebook doodle art style, casual quick sketch, simple line drawings, playful scribbles"
             },
             "colors": {
                 "エネルギッシュ（燃えるような赤・黄色系）": "vibrant color palette, energetic red and yellow tones",
@@ -478,7 +480,9 @@
                 "カラフル！フルカラーまんが": "full color manga style, vibrant and clean",
                 "おしゃれな雑誌・イラスト風": "editorial manga style, fashionable magazine layout",
                 "ふんわりレトロアニメ風（エモい感じ）": "retro 80s anime manga style, gentle vintage aesthetic",
-                "ゆるふわ日常・4コマ風": "cute pastel webtoon style, soft and friendly"
+                "ゆるふわ日常・4コマ風": "cute pastel webtoon style, soft and friendly",
+                "わたしの絵日記風（かわいい・手書き）": "cute illustrated journal style, sweet hand-drawn pastel sketch, whimsical childhood memory drawing",
+                "ノートの落書き風（ゆるかわ線画）": "cute notebook doodle style, charming quick pen sketch, simple kawaii scribbles, playful lines"
             },
             "colors": {
                 "パステルソフト（マカロンみたいな可愛い色）": "soft pastel color palette, gentle pink and mint lighting",
@@ -496,15 +500,22 @@
         }
     };
 
-    // 共通項目
+    // 共通項目（十字分割を抑制し、縦並び一列をAIに強く意識させるように英語指示を再構築）
     const DATA_LAYOUT = {
-        "4コマ構成（起承転結・おすすめ！）": "4-panel comic layout, yonkoma",
+        "4コマ構成（日本の縦並び・おすすめ！）": "vertical 4-panel comic strip, arranged sequentially from top to bottom in a single column",
         "3コマ（ちょっと短め）": "3-panel comic layout",
         "5〜7コマ（しっかりストーリー）": "5 to 7 panels comic page layout",
         "大ゴマ ＋ 小コマ（メリハリのある大迫力）": "dynamic panel layout with one large splash panel and smaller secondary panels"
     };
 
-    const DATA_VFX = ["映画みたいなカメラアングル (Cinematic)", "スピード線・びゅんびゅん線 (Speed Lines)", "びりびり・どかーん効果 (Impact Frames)", "ピピッとデータ画面 (Data Overlays)"];
+    // ご相談いただいた、ななめコマ（変形コマ）の発生確率を高めるエフェクト指示を最上部に追加
+    const DATA_VFX = [
+        "大迫力のななめコマ（変形コマ） (Slanted Panel Borders)",
+        "映画みたいなカメラアングル (Cinematic)", 
+        "スピード線・びゅんびゅん線 (Speed Lines)", 
+        "びりびり・どかーん効果 (Impact Frames)", 
+        "ピピッとデータ画面 (Data Overlays)"
+    ];
     const DATA_TEXTURE = ["英語のドカーン文字 (POP SFX)", "手書きの丸いフキダシ", "四角いナレーション箱", "ザラザラしたアミ点 (Halftone)"];
     const DATA_EMPHASIS = ["燃える正義感・オーラ", "天才的なひらめき・かしこさ", "元気いっぱい・ユーモア", "やさしさ・ピュアな心", "絶対に負けない強い決意"];
     const DATA_MOOD = ["ド迫力！", "うるうる感動", "おしゃれ・スタイリッシュ", "わくわく元気", "ちょっとダーク・ハラハラ"];
@@ -515,7 +526,7 @@
         initSelectOptions('final_mood', DATA_MOOD);
         initSelectOptions('panel_layout', Object.keys(DATA_LAYOUT));
         
-        document.getElementById('panel_layout').value = "4コマ構成（起承転結・おすすめ！）";
+        document.getElementById('panel_layout').value = "4コマ構成（日本の縦並び・おすすめ！）";
 
         initCheckboxes('vfx_container', DATA_VFX, 'vfx');
         initCheckboxes('texture_container', DATA_TEXTURE, 'tex');
@@ -588,7 +599,7 @@
         textarea.focus();
     }
 
-    // Gemini用指示書 プロンプト生成コアロジック
+    // AI用指示書 プロンプト生成コアロジック
     function generateGeminiPrompt() {
         const subject = document.getElementById('subject_custom').value.trim();
         if (!subject) {
@@ -615,7 +626,16 @@
         const theme = MANGA_DATA[mType].themes[themeKey] || themeKey;
 
         const vfxList = [];
-        document.querySelectorAll('#vfx_container input:checked').forEach(el => vfxList.push(el.value));
+        document.querySelectorAll('#vfx_container input:checked').forEach(el => {
+            let val = el.value;
+            // ななめコマ（変形コマ）が選ばれていた場合、AI用の英語キーワードに翻訳補正をかける
+            if (val.includes("大迫力のななめコマ")) {
+                vfxList.push("slanted panel borders, dynamic diagonal layout, dramatic panel compositions");
+            } else {
+                vfxList.push(val);
+            }
+        });
+        
         const texList = [];
         document.querySelectorAll('#texture_container input:checked').forEach(el => texList.push(el.value));
 
