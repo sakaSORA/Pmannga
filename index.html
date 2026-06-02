@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=no">
-    <title>まんがプロンプトビルダー for AI</title>
+    <title>まんがプロンプトビルダー for Gemini</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#4a90e2">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -20,15 +20,13 @@
             --bg-color: #1e1e1e;
             --container-bg: #2d2d2d;
             --accent-color: #4a90e2; /* 標準の青 */
-            --accent-boys: #3a86ff;  /* 男の子向けの爽やかな青 */
-            --accent-girls: #ff007f; /* 女の子向けの可愛いピンク */
             --text-color: #f0f0f0;
             --border-color: #444444;
             --font-family: "HG丸ゴシックM-PRO", "HG Maru Gothic M-PRO", "Hiragino Maru Gothic ProN", "Yu Gothic", sans-serif;
             --font-size: 13pt; /* 共通ルールに従い、一貫性を持たせた基準サイズ13pt */
         }
 
-        /* スマホ向けにスクロールバーのバウンスを抑制、タップハイライトをクリア */
+        /* スマホ向けにスクロールバー的バウンスを抑制、タップハイライトをクリア */
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
@@ -38,7 +36,6 @@
             margin: 0;
             padding: 12px;
             -webkit-tap-highlight-color: transparent;
-            transition: background-color 0.3s ease;
             overflow-x: hidden; /* 横スクロールの発生を完全に禁止 */
         }
 
@@ -60,7 +57,6 @@
             color: var(--accent-color);
             border-bottom: 2px solid var(--border-color);
             padding-bottom: 8px;
-            transition: color 0.3s ease;
         }
 
         fieldset {
@@ -69,7 +65,7 @@
             padding: 12px 15px;
             margin-bottom: 16px;
             background-color: rgba(255,255,255,0.02);
-            min-width: 0; /* ブラウザ標準の最小幅制限を解除し、スマホ画面幅に強制フィットさせる最重要指定 */
+            min-width: 0; /* スマホ画面幅に強制フィットさせる最重要指定 */
             width: 100%;
         }
 
@@ -78,21 +74,12 @@
             color: var(--accent-color);
             padding: 0 8px;
             font-size: 0.95rem;
-            transition: color 0.3s ease;
         }
 
         .form-group {
             margin-bottom: 14px;
             display: flex;
             flex-direction: column;
-            width: 100%;
-        }
-
-        /* スマホ縦スクロールに特化させ、2列配置を完全な1列配置へ最適化 */
-        .form-row {
-            display: flex;
-            flex-direction: column;
-            gap: 0;
             width: 100%;
         }
 
@@ -103,7 +90,7 @@
         }
 
         /* スマホの親指でのタップ、入力しやすさを担保する大きめのインプット領域（高さ44px以上） */
-        input[type="text"], select, textarea {
+        select, textarea {
             background-color: #383838;
             border: 1px solid var(--border-color);
             color: var(--text-color);
@@ -119,14 +106,14 @@
 
         /* selectコントロールのスマホ向け矢印デザイン調整 */
         select {
-            background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23f0f0f0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23f0f0f0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
             background-repeat: no-repeat;
             background-position: right 12px center;
             background-size: 16px;
             padding-right: 40px;
         }
 
-        input[type="text"]:focus, select:focus, textarea:focus {
+        select:focus, textarea:focus {
             border-color: var(--accent-color);
             background-color: #404040;
         }
@@ -135,64 +122,28 @@
             resize: vertical;
         }
 
-        /* チェックボックスをスマホの指で誤タップしづらいよう、余裕を持ったグリッドに配置 */
-        .checkbox-group {
-            display: grid;
-            grid-template-columns: 1fr; /* 1列に並べてスクロール選択を容易に */
-            gap: 8px;
-            padding-top: 6px;
-            width: 100%;
-        }
-
-        /* タッチ領域を拡張したラベルデザイン */
-        .checkbox-label {
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-            user-select: none;
-            background-color: #333333;
-            padding: 10px 12px;
-            border-radius: 6px;
-            border: 1px solid transparent;
-            width: 100%;
-            word-break: break-all; /* 長い子供向けテキストもスマホ画面内で安全に折り返す修正 */
-        }
-        .checkbox-label:active {
-            background-color: #3e3e3e;
-        }
-
-        .checkbox-label input {
-            margin-right: 12px;
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
-            flex-shrink: 0; /* チェックボックス自体が横幅縮小で潰れるのを完全に防ぐ */
-        }
-
-        /* 補足指示用タグボタンエリア（横スクロール可能にしてボタンが潰れるのを防ぐ） */
+        /* 追加のめいれいボタンエリア（画面外へのはみ出しを防ぐため、スマホ幅に最適化した1列の縦並び） */
         .tag-buttons {
             margin-bottom: 8px;
             display: flex;
-            gap: 6px;
-            overflow-x: auto;
-            padding-bottom: 4px;
-            -webkit-overflow-scrolling: touch;
+            flex-direction: column; /* 縦並びに固定 */
+            gap: 8px;
             width: 100%;
         }
-        .tag-buttons::-webkit-scrollbar {
-            display: none; /* スクロールバー非表示 */
-        }
+        
         .tag-btn {
             background-color: #444;
             color: #fff;
-            border: none;
-            padding: 8px 14px;
+            border: 1px solid var(--border-color);
+            padding: 12px;
             border-radius: 6px;
             cursor: pointer;
             font-family: var(--font-family);
-            font-size: 0.85rem;
-            white-space: nowrap; /* 折り返しを防止 */
-            flex-shrink: 0;
+            font-size: 0.95rem;
+            text-align: center;
+            width: 100%;
+            box-sizing: border-box;
+            transition: background-color 0.2s ease;
         }
         .tag-btn:active {
             background-color: var(--accent-color);
@@ -238,7 +189,6 @@
             cursor: pointer;
             font-family: var(--font-family);
             box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-            transition: background-color 0.3s ease;
         }
         button.main-btn:active {
             filter: brightness(0.8);
@@ -296,7 +246,6 @@
             font-weight: bold;
             font-size: 1.1rem;
             color: var(--accent-color);
-            transition: color 0.3s ease;
         }
         .modal-body {
             flex-grow: 1;
@@ -306,7 +255,7 @@
         }
         .modal-body textarea {
             width: 100%;
-            height: 60vh; /* スマホ画面の縦サイズに対して最適化 */
+            height: 60vh;
             background-color: #1e1e1e;
             color: #00ff66;
             font-family: Consolas, Monaco, var(--font-family);
@@ -328,13 +277,13 @@
 <body>
 
 <div class="container">
-    <h1 id="mainTitle">まんがプロンプトビルダー for AI</h1>
+    <h1>まんがプロンプトビルダー for Gemini</h1>
 
     <div class="history-area">
         <div class="form-group" style="margin-bottom: 6px;">
-            <label for="historySelect">じどう保存:</label>
+            <label for="historySelect">じどう保存された れきし:</label>
             <select id="historySelect">
-                <option value="">-- もどしたい時 --</option>
+                <option value="">-- もどしたい時につかう --</option>
             </select>
         </div>
         <div class="history-controls">
@@ -346,46 +295,22 @@
 
     <form id="promptForm" onsubmit="return false;">
         <fieldset>
-            <legend id="legendCommon">★ 基本設定（どんな世界にする？）</legend>
+            <legend>★ まんがの基本設定（どんな世界にする？）</legend>
             
+            <!-- 3行ほどの十分な縦幅をとり、複数キャラを入力しやすくした登場人物欄 -->
             <div class="form-group">
-                <label for="manga_type">つくりたい まんがのタイプ：</label>
-                <select id="manga_type" onchange="onMangaTypeChange()">
-                    <option value="boys">👦 男の子向け（熱血・バトル・カッコいい）</option>
-                    <option value="girls">👧 女の子向け（かわいい・おしゃれ・ファンタジー）</option>
-                </select>
+                <label for="subject_custom">まんがの主人公や登場人物（だれが でてくる？）：</label>
+                <textarea id="subject_custom" rows="3" placeholder="例：&#10;シズク（ジト目で大人しいダウナー系の少女）&#10;ビルダーくん（アプリの妖精。優しく教えてくれるマスコット）" required></textarea>
             </div>
 
             <div class="form-group">
-                <label for="subject_custom">まんがの主人公（だれが でてくる？）：</label>
-                <input type="text" id="subject_custom" placeholder="例：炎をあやつる少年、おしゃべりな黒ネコ" required>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="manga_style">まんがのタッチ（絵のスタイル）：</label>
-                    <select id="manga_style"></select>
-                </div>
-                <div class="form-group">
-                    <label for="color_palette">全体の色づかい：</label>
-                    <select id="color_palette"></select>
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="char_emphasis">主人公の「オーラ」や「中身」：</label>
-                    <select id="char_emphasis"></select>
-                </div>
-                <div class="form-group">
-                    <label for="final_mood">全体のふんいき：</label>
-                    <select id="final_mood"></select>
-                </div>
+                <label for="manga_style">絵のスタイル（タッチ）：</label>
+                <select id="manga_style"></select>
             </div>
         </fieldset>
 
         <fieldset>
-            <legend id="legendPage">📖 ページの組み立て</legend>
+            <legend>📖 ページの組み立て</legend>
 
             <div class="form-group">
                 <label for="panel_layout">コマの数・ならび方：</label>
@@ -393,38 +318,25 @@
             </div>
 
             <div class="form-group">
-                <label for="story_theme">どんなお話・場面にする？：</label>
-                <select id="story_theme"></select>
-            </div>
-
-            <div class="form-group">
-                <label>画面のパワー（効果・エフェクト）※いくつ選んでもOK：</label>
-                <div class="checkbox-group" id="vfx_container"></div>
-            </div>
-
-            <div class="form-group">
-                <label>まんがの飾り（文字やワク）※いくつ選んでもOK：</label>
-                <div class="checkbox-group" id="texture_container"></div>
-            </div>
-
-            <div class="form-group">
                 <label for="additional_notes">もっとこだわりたいこと（追加のめいれい）：</label>
+                <!-- スマホ画面からはみ出さないよう、完全に縦並びブロックに再編したボタン配置 -->
                 <div class="tag-buttons">
-                    <button type="button" class="tag-btn" onclick="insertTag(' --ar 2:3')">[たて長にする --ar 2:3]</button>
-                    <button type="button" class="tag-btn" onclick="insertTag(' --ar 3:2')">[よこ長にする --ar 3:2]</button>
-                    <button type="button" class="tag-btn" onclick="insertTag(' --niji 6')">[アニメっぽく --niji 6]</button>
+                    <button type="button" class="tag-btn" onclick="insertTag(' --ar 2:4')">📱 スマホ画面サイズにする [--ar 2:4]</button>
+                    <button type="button" class="tag-btn" onclick="insertTag(' --ar 2:3')">📖 週刊誌サイズにする [--ar 2:3]</button>
+                    <button type="button" class="tag-btn" onclick="insertTag(' --ar 3:2')">💻 よこ長画面サイズにする [--ar 3:2]</button>
+                    <button type="button" class="tag-btn" onclick="insertTag(' --niji 6')">✨ アニメっぽくする [--niji 6]</button>
                 </div>
                 <textarea id="additional_notes" rows="2" placeholder="特別なカメラの角度や、かきこみたいことがあれば自由に入力してね。"></textarea>
             </div>
 
             <div class="form-group">
-                <label for="dialogues_text">場所や場面、セリフ（改行してね）：</label>
-                <textarea id="dialogues_text" rows="6" placeholder="ひるやすみの学校の校庭&#10;「よしっ、いくぞ！」&#10;「うわっ！前がみえないぞ！？」&#10;「なんとかなるさ！」&#10;「大せいこう！」"></textarea>
+                <label for="dialogues_text">セリフ・キャラクターの言葉（改行してね）：</label>
+                <textarea id="dialogues_text" rows="6" placeholder="「よしっ、いくぞ！」&#10;「うわっ！前がみえないぞ！？」&#10;「なんとかなるさ！」&#10;「大せいこう！」"></textarea>
             </div>
         </fieldset>
 
         <div class="actions">
-            <button type="button" class="main-btn" id="generateBtn" onclick="generateGeminiPrompt()">AI用の指示書（プロンプト）をつくる！</button>
+            <button type="button" class="main-btn" onclick="generateGeminiPrompt()">AI用の指示書（プロンプト）をつくる！</button>
         </div>
     </form>
 </div>
@@ -432,14 +344,14 @@
 <div class="modal-overlay" id="outputModal">
     <div class="modal-box">
         <div class="modal-header">
-            <div class="modal-title" id="modalTitle">できたよ！AIにわたす指示書</div>
+            <div class="modal-title">できたよ！AIにわたす指示書</div>
             <button type="button" class="sub-btn" style="padding: 6px 12px;" onclick="closeModal()">✕</button>
         </div>
         <div class="modal-body">
             <textarea id="outputText" readonly></textarea>
         </div>
         <div class="modal-footer">
-            <button type="button" class="sub-btn" id="copyBtn" style="background-color: var(--accent-color);" onclick="copyToClipboard()">コピーする</button>
+            <button type="button" class="sub-btn" style="background-color: var(--accent-color);" onclick="copyToClipboard()">コピーする</button>
             <button type="button" class="sub-btn" onclick="closeModal()">とじる</button>
         </div>
     </div>
@@ -447,113 +359,44 @@
 
 <script>
     // --------------------------------------------------------
-    // お子様向けデータ定義（男の子向け・女の子向けで切り替え）
+    // 選ぶだけでワクワクする16種類の絵柄定義
     // --------------------------------------------------------
-    const MANGA_DATA = {
-        "boys": {
-            "styles": {
-                "週刊少年ジャンプ風（熱血・バトル）": "shonen manga style, action oriented, energetic",
-                "迫力満載！白黒（モノクロ）まんが": "black and white manga style, monochrome, high contrast",
-                "近未来サイバー（SF・ロボット）": "cyberpunk manga style, futuristic, high tech",
-                "アメコミ風（ポップ・太い線）": "american comic book style, bold outlines, bright colors",
-                "ゲーム・ドット絵風": "8bit pixel art style, retro video game aesthetic",
-                "ぼくの絵日記風（ほのぼの・手書き）": "illustrated diary style, cute hand-drawn sketch, naive art, simple child's drawing, heartwarming",
-                "ノートの落書き風（かんたん線画）": "notebook doodle art style, casual quick sketch, simple line drawings, playful scribbles"
-            },
-            "colors": {
-                "エネルギッシュ（燃えるような赤・黄色系）": "vibrant color palette, energetic red and yellow tones",
-                "クール＆ダーク（影が多めのカッコいい暗さ）": "dark moody atmosphere, cool shadows",
-                "ネオン（サイバー空間みたいに光る色）": "neon cyberpunk color palette, glowing lights",
-                "白黒（モノクロ）＋キメ色1色": "monochrome with a single bright accent color"
-            },
-            "themes": {
-                "主人公のカッコいい登場シーン": "heroic character introduction scene",
-                "大わざ炸裂！パワー覚醒・変身": "epic character awakening, powerful transformation sequence",
-                "ライバルとの激しいバトル・対決": "intense action scene, dramatic duel",
-                "大ピンチからひらめきで大逆転": "getting out of a pinch, sudden breakthrough realization",
-                "ギャグ・おもしろい失敗談": "slapstick comedy, hilarious failure, humorous situation"
-            }
-        },
-        "girls": {
-            "styles": {
-                "キラキラ少女まんが風（かわいい・きれい）": "shoujo manga style, delicate lines, emotional, sparkling",
-                "カラフル！フルカラーまんが": "full color manga style, vibrant and clean",
-                "おしゃれな雑誌・イラスト風": "editorial manga style, fashionable magazine layout",
-                "ふんわりレトロアニメ風（エモい感じ）": "retro 80s anime manga style, gentle vintage aesthetic",
-                "ゆるふわ日常・4コマ風": "cute pastel webtoon style, soft and friendly",
-                "わたしの絵日記風（かわいい・手書き）": "cute illustrated journal style, sweet hand-drawn pastel sketch, whimsical childhood memory drawing",
-                "ノートの落書き風（ゆるかわ線画）": "cute notebook doodle style, charming quick pen sketch, simple kawaii scribbles, playful lines"
-            },
-            "colors": {
-                "パステルソフト（マカロンみたいな可愛い色）": "soft pastel color palette, gentle pink and mint lighting",
-                "ドリーミー（ゆめかわ・グラデーション）": "dreamy magical color palette, purple and pink gradients",
-                "ウォーム（ぬくもりのある自然な色）": "warm earthy color tones, natural",
-                "ビビッド（お洋服みたいにおしゃれで鮮やか）": "fashionable vivid color palette, stylish tones"
-            },
-            "themes": {
-                "主人公のかわいい・おしゃれな紹介": "cute character introduction scene, stylish profile",
-                "ステキな変身・ドレスアップ！": "magical girl transformation, beautiful dress up sequence",
-                "ドキドキ・胸キュンの瞬間": "heart-fluttering moment, emotional and sweet scene",
-                "みんなでワイワイ楽しいおしゃべり": "friendly chat, happy daily life scene",
-                "ハプニング発生！でもがんばる！": "cute trouble sequence, determination and resolution"
-            }
-        }
+    const DATA_STYLE = {
+        "ゆるキャラ風": "yuru-chara style, cute mascot, simplified vector",
+        "線が少ないミニマルイラスト": "minimalist illustration, simple clean lines, flat design",
+        "手描き風スケッチ": "hand-drawn sketch, pencil line art, casual scribbles, heartwarming",
+        "ふわふわ系マスコット": "fluffy mascot character, soft shading, adorable, friendly look",
+        "絵本風（2Dフラット）": "storybook illustration, 2D flat art, whimsical design",
+        "デフォルメマスコット風": "chibi mascot style, super deformed character art",
+        "現代アニメ風": "modern anime style, vibrant coloring, clean shading, beautiful details",
+        "少年漫画風": "shonen manga style, dynamic composition, energetic and sharp lines",
+        "北斗の拳風": "80s masculine retro manga style, muscular anatomy, thick ink lines, Hokuto no Ken aesthetic",
+        "JOJO風": "highly stylized manga art, dramatic shading, bold heavy lines, JoJo aesthetic",
+        "少女漫画風": "shoujo manga style, delicate lines, expressive emotional eyes",
+        "ベルバラ風": "classic 70s shoujo manga style, retro anime vintage, dramatic eyes, roses aesthetic",
+        "ディズニー風": "classic western 3D animation style, Disney character aesthetic",
+        "サウスパーク風": "2D cutout animation style, South Park aesthetic, minimalist geometric papercraft",
+        "水彩画風": "watercolor painting style, soft bleeding ink, pastel translucent tones",
+        "ピクセルアート風": "8bit pixel art style, retro video game aesthetic"
     };
 
-    // 共通項目（十字分割を抑制し、縦並び一列をAIに強く意識させるように英語指示を再構築）
+    // 十字分割を強力に抑制し、日本の美しい縦4コマ並びを引き出す最適化英語指示
     const DATA_LAYOUT = {
         "4コマ構成（日本の縦並び・おすすめ！）": "vertical 4-panel comic strip, arranged sequentially from top to bottom in a single column",
-        "3コマ（ちょっと短め）": "3-panel comic layout",
+        "3コマ（ちょっと短め）": "3-panel comic layout, clean frames",
         "5〜7コマ（しっかりストーリー）": "5 to 7 panels comic page layout",
         "大ゴマ ＋ 小コマ（メリハリのある大迫力）": "dynamic panel layout with one large splash panel and smaller secondary panels"
     };
 
-    // ご相談いただいた、ななめコマ（変形コマ）の発生確率を高めるエフェクト指示を最上部に追加
-    const DATA_VFX = [
-        "大迫力のななめコマ（変形コマ） (Slanted Panel Borders)",
-        "映画みたいなカメラアングル (Cinematic)", 
-        "スピード線・びゅんびゅん線 (Speed Lines)", 
-        "びりびり・どかーん効果 (Impact Frames)", 
-        "ピピッとデータ画面 (Data Overlays)"
-    ];
-    const DATA_TEXTURE = ["英語のドカーン文字 (POP SFX)", "手書きの丸いフキダシ", "四角いナレーション箱", "ザラザラしたアミ点 (Halftone)"];
-    const DATA_EMPHASIS = ["燃える正義感・オーラ", "天才的なひらめき・かしこさ", "元気いっぱい・ユーモア", "やさしさ・ピュアな心", "絶対に負けない強い決意"];
-    const DATA_MOOD = ["ド迫力！", "うるうる感動", "おしゃれ・スタイリッシュ", "わくわく元気", "ちょっとダーク・ハラハラ"];
-
     // UI初期構築
     window.addEventListener('DOMContentLoaded', () => {
-        initSelectOptions('char_emphasis', DATA_EMPHASIS);
-        initSelectOptions('final_mood', DATA_MOOD);
+        initSelectOptions('manga_style', Object.keys(DATA_STYLE));
         initSelectOptions('panel_layout', Object.keys(DATA_LAYOUT));
         
         document.getElementById('panel_layout').value = "4コマ構成（日本の縦並び・おすすめ！）";
 
-        initCheckboxes('vfx_container', DATA_VFX, 'vfx');
-        initCheckboxes('texture_container', DATA_TEXTURE, 'tex');
-
-        // 最初のデータ展開（男の子向けをデフォルトに設定）
-        onMangaTypeChange();
-
         updateHistoryCombo();
     });
-
-    // まんがタイプの変更（男の子・女の子）を感知して動的にUIカラーと選択肢を変える
-    function onMangaTypeChange() {
-        const type = document.getElementById('manga_type').value;
-        
-        // CSS変数のアクセントカラーを動的に切り替えてUIの雰囲気を変える
-        const root = document.documentElement;
-        if (type === 'boys') {
-            root.style.setProperty('--accent-color', 'var(--accent-boys)');
-        } else {
-            root.style.setProperty('--accent-color', 'var(--accent-girls)');
-        }
-
-        // 選択されたタイプに応じた中身に書き換え
-        updateSelectOptions('manga_style', Object.keys(MANGA_DATA[type].styles));
-        updateSelectOptions('color_palette', Object.keys(MANGA_DATA[type].colors));
-        updateSelectOptions('story_theme', Object.keys(MANGA_DATA[type].themes));
-    }
 
     function initSelectOptions(elementId, keys) {
         const select = document.getElementById(elementId);
@@ -565,87 +408,35 @@
         });
     }
 
-    function updateSelectOptions(elementId, keys) {
-        const select = document.getElementById(elementId);
-        select.innerHTML = ''; // 一度からっぽにする
-        keys.forEach(key => {
-            const opt = document.createElement('option');
-            opt.value = key;
-            opt.textContent = key;
-            select.appendChild(opt);
-        });
-    }
-
-    function initCheckboxes(containerId, list, prefix) {
-        const container = document.getElementById(containerId);
-        list.forEach((item, index) => {
-            const label = document.createElement('label');
-            label.className = 'checkbox-label';
-            
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.id = `${prefix}_${index}`;
-            checkbox.value = item;
-            
-            label.appendChild(checkbox);
-            label.appendChild(document.createTextNode(item));
-            container.appendChild(label);
-        });
-    }
-
     function insertTag(tag) {
         const textarea = document.getElementById('additional_notes');
         textarea.value += tag;
         textarea.focus();
     }
 
-    // AI用指示書 プロンプト生成コアロジック
+    // Gemini用指示書 プロンプト生成コアロジック
     function generateGeminiPrompt() {
         const subject = document.getElementById('subject_custom').value.trim();
         if (!subject) {
-            alert("まんがの主人公を入力してね！");
+            alert("まんがの主人公や登場人物を入力してね！");
             return;
         }
 
-        const mType = document.getElementById('manga_type').value;
-
-        // 内部の英語定義へ変換して割り当て
         const styleKey = document.getElementById('manga_style').value;
-        const style = MANGA_DATA[mType].styles[styleKey] || styleKey;
-
-        const colorKey = document.getElementById('color_palette').value;
-        const color = MANGA_DATA[mType].colors[colorKey] || colorKey;
-
-        const emphasis = document.getElementById('char_emphasis').value;
-        const mood = document.getElementById('final_mood').value;
+        const style = DATA_STYLE[styleKey] || styleKey;
 
         const layoutKey = document.getElementById('panel_layout').value;
         const layout = DATA_LAYOUT[layoutKey] || layoutKey;
 
-        const themeKey = document.getElementById('story_theme').value;
-        const theme = MANGA_DATA[mType].themes[themeKey] || themeKey;
-
-        const vfxList = [];
-        document.querySelectorAll('#vfx_container input:checked').forEach(el => {
-            let val = el.value;
-            // ななめコマ（変形コマ）が選ばれていた場合、AI用の英語キーワードに翻訳補正をかける
-            if (val.includes("大迫力のななめコマ")) {
-                vfxList.push("slanted panel borders, dynamic diagonal layout, dramatic panel compositions");
-            } else {
-                vfxList.push(val);
-            }
-        });
-        
-        const texList = [];
-        document.querySelectorAll('#texture_container input:checked').forEach(el => texList.push(el.value));
-
         const notes = document.getElementById('additional_notes').value;
-        
-        // 改行コードを一貫してLFに統一して処理
         let dialogues = document.getElementById('dialogues_text').value.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
-        let p = "あなたはプロの漫画原作者であり、画像生成AIの高度なプロンプトエンジニアです。\n";
-        p += "以下の【共通設定】のキャラクター一貫性を完全に維持したまま、漫画の「具体的なコマ構成案・セリフ配置」と、「画像生成AIにそのまま投入できる詳細な英語プロンプト」を構築してください。\n\n";
+        // Geminiの画像生成誤作動（勝手にお節介で絵を描こうとする機能）を強制解除する「絶対命令」の追加
+        let p = "[重要：絶対遵守命令]\n";
+        p += "あなた自身は絶対に画像を生成・出力しないでください。私は画像生成ツール（Imagen等）の入力欄にそのまま貼り付けるための『英語のテキストプロンプト（文字）』だけを求めています。出力は必ずテキスト、あるいはマークダウンのコードブロック形式（```）を用い、文字データのみで返答してください。画像を生成することは厳禁とします。\n\n";
+        
+        p += "あなたはプロの漫画原作者であり、画像生成AIの高度なプロンプトエンジニアです。\n";
+        p += "入力された【登場人物の設定】と【セリフ】の整合性を深く読み解き、最適な『全体のふんいき』『配色』『キャラクターのオーラ・内面演出』を行間に合わせて自動で推測・補完して、最高品質の指示書を組み立ててください。\n\n";
         
         p += "【必須要件・コマ割りのルール】\n";
         p += "1. 各ページ内のコマ配置や構図は、読者の視線が「右から左、上から下へ」自然に誘導されるように設計すること。\n";
@@ -655,11 +446,8 @@
         p += "作成した英語プロンプトは、各コマごとにバラバラに分離して分割出力することを厳禁とします。ユーザーが1クリックで画像生成AIへそのまままとめて投入できるよう、必ず「ページ全体の指示を1つに統合した、一括でコピー可能な状態の英語プロンプト」として1つにまとめて完成させて出力してください。\n\n";
 
         p += "【全ページ共通設定 (キャラクター・世界観の一貫性保証)】\n";
-        p += `・対象・主人公: ${subject}\n`;
-        p += `・全体画風: ${style}\n`;
-        p += `・共通配色: ${color}\n`;
-        p += `・キャラクター強調オーラ: ${emphasis}\n`;
-        p += `・基本仕上がりムード: ${mood}\n\n`;
+        p += `・登場人物・主人公設定: ${subject}\n`;
+        p += `・全体画風（スタイル）: ${style}\n\n`;
         p += "※上記特徴（服装、髪型、色彩、顔の傾向など）は、プロンプト内でブレずに共通してシームレスに描写されるように英文プロンプトを固定・調整してください。\n\n";
 
         p += "--------------------------------------------------------\n";
@@ -667,9 +455,6 @@
         p += "--------------------------------------------------------\n";
         p += "■ 第 1 ページ目\n";
         p += `  ・コマ構成指定: ${layout}\n`;
-        p += `  ・展開・ストーリーテーマ: ${theme}\n`;
-        if (vfxList.length > 0) p += `  ・演出効果: ${vfxList.join(', ')}\n`;
-        if (texList.length > 0) p += `  ・質感・装飾表現: ${texList.join(', ')}\n`;
         
         if (dialogues.trim()) {
             p += "  ・組み込んでほしいセリフ・会話（※日本語のままで処理すること）:\n";
@@ -678,9 +463,13 @@
         }
         
         if (notes.trim()) {
-            p += `  ・このページの個別補足指示: ${notes}\n`;
+            p += `  ・このページの個別補足指示（画面サイズ・アスペクト比など）: ${notes}\n`;
         }
         p += "\n";
+        
+        // 命令の再念押し
+        p += "[最終確認]\n";
+        p += "繰り返します。画像の出力は完全に不要です。一括コピー可能な状態の『英語テキストプロンプト（文字列）』のみを出力してください。";
 
         document.getElementById('outputText').value = p;
         openModal();
@@ -709,7 +498,7 @@
         }
 
         const now = new Date();
-        const timestamp = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')} ${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+        const timestamp = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
         
         let displaySubject = subjectStr.length > 20 ? subjectStr.substring(0, 20) + "..." : subjectStr;
         const title = `${timestamp} - ${displaySubject}`;
@@ -720,22 +509,10 @@
     }
 
     function getCurrentState() {
-        const vfx_checked = {};
-        document.querySelectorAll('#vfx_container input').forEach(el => vfx_checked[el.id] = el.checked);
-        const tex_checked = {};
-        document.querySelectorAll('#texture_container input').forEach(el => tex_checked[el.id] = el.checked);
-
         return {
-            type: document.getElementById('manga_type').value,
             subject: document.getElementById('subject_custom').value,
             style: document.getElementById('manga_style').value,
-            color: document.getElementById('color_palette').value,
-            emphasis: document.getElementById('char_emphasis').value,
-            mood: document.getElementById('final_mood').value,
             layout: document.getElementById('panel_layout').value,
-            theme: document.getElementById('story_theme').value,
-            vfx: vfx_checked,
-            tex: tex_checked,
             notes: document.getElementById('additional_notes').value,
             dialogues: document.getElementById('dialogues_text').value
         };
@@ -763,35 +540,12 @@
         if (!target) return;
 
         const d = target.data;
-        
-        // タイプの復元と、それに伴うセレクトオプションの再構築
-        document.getElementById('manga_type').value = d.type || 'boys';
-        onMangaTypeChange();
-
         document.getElementById('subject_custom').value = d.subject || '';
         document.getElementById('manga_style').value = d.style || '';
-        document.getElementById('color_palette').value = d.color || '';
-        document.getElementById('char_emphasis').value = d.emphasis || '';
-        document.getElementById('final_mood').value = d.mood || '';
         document.getElementById('panel_layout').value = d.layout || '';
-        document.getElementById('story_theme').value = d.theme || '';
         document.getElementById('additional_notes').value = d.notes || '';
         document.getElementById('dialogues_text').value = d.dialogues || '';
 
-        document.querySelectorAll('#vfx_container input').forEach(el => el.checked = false);
-        if (d.vfx) {
-            Object.keys(d.vfx).forEach(key => {
-                const el = document.getElementById(key);
-                if (el) el.checked = d.vfx[key];
-            });
-        }
-        document.querySelectorAll('#texture_container input').forEach(el => el.checked = false);
-        if (d.tex) {
-            Object.keys(d.tex).forEach(key => {
-                const el = document.getElementById(key);
-                if (el) el.checked = d.tex[key];
-            });
-        }
         alert("前のデータにもどしたよ！");
     }
 
@@ -841,7 +595,6 @@
                 .then(() => alert("クリップボードにコピーしたよ！ AIの画面に貼り付けてね！"))
                 .catch(err => alert("コピーに失敗しちゃった: " + err));
         } else {
-            // フォールバック（古いブラウザ用）
             const textArea = document.getElementById('outputText');
             textArea.select();
             document.execCommand('copy');
