@@ -20,6 +20,7 @@
             --bg-color: #1e1e1e;
             --container-bg: #2d2d2d;
             --accent-color: #4a90e2; /* 標準の青 */
+            --accent-active: #00ff66; /* スイッチONの時のピカッと光る緑 */
             --text-color: #f0f0f0;
             --border-color: #444444;
             --font-family: "HG丸ゴシックM-PRO", "HG Maru Gothic M-PRO", "Hiragino Maru Gothic ProN", "Yu Gothic", sans-serif;
@@ -104,15 +105,6 @@
             appearance: none;
         }
 
-        /* selectコントロールのスマホ向け矢印デザイン調整 */
-        select {
-            background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23f0f0f0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 12px center;
-            background-size: 16px;
-            padding-right: 40px;
-        }
-
         select:focus, textarea:focus {
             border-color: var(--accent-color);
             background-color: #404040;
@@ -122,11 +114,11 @@
             resize: vertical;
         }
 
-        /* 追加のめいれいボタンエリア（画面外へのはみ出しを防ぎ、スマホ幅に最適化した1列の縦並びブロック配置） */
+        /* スイッチON/OFFをスマホ幅に最適化した1列の縦並び配置 */
         .tag-buttons {
             margin-bottom: 8px;
             display: flex;
-            flex-direction: column; /* 完全に縦並びに固定 */
+            flex-direction: column;
             gap: 8px;
             width: 100%;
         }
@@ -135,41 +127,69 @@
             background-color: #444;
             color: #fff;
             border: 1px solid var(--border-color);
-            padding: 12px;
+            padding: 10px 12px;
             border-radius: 6px;
             cursor: pointer;
             font-family: var(--font-family);
-            font-size: 0.95rem;
-            text-align: left; /* 左寄せにしてスマホでの視認性を強化 */
-            padding-left: 16px;
+            font-size: 0.88rem; /* 13ptベースからボタン幅に合わせて綺麗に収まる微調整 */
+            text-align: left;
             width: 100%;
             box-sizing: border-box;
-            transition: background-color 0.2s ease;
+            transition: all 0.2s ease;
+            white-space: nowrap; /* ボタン内の文字の自動折り返しを禁止し、1行でスッキリ表示 */
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
-        .tag-btn:active {
-            background-color: var(--accent-color);
+        
+        /* スイッチがON（アクティブ）になったときの鮮やかなスタイル */
+        .tag-btn.active {
+            background-color: #1b4d3e;
+            color: var(--accent-active);
+            border-color: var(--accent-active);
+            font-weight: bold;
         }
 
-        /* 自動保存履歴管理エリア（スマホ向けに横並びから2段構成に再レイアウト） */
-        .history-area {
+        /* 管理・保存エリアのコンテナー */
+        .management-area {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 12px;
             margin-bottom: 16px;
             background-color: #222;
             padding: 12px;
             border-radius: 8px;
             width: 100%;
         }
-        .history-controls {
-            display: flex;
-            gap: 6px;
-            width: 100%;
+
+        .management-block {
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
         }
-        .history-controls button {
-            flex: 1;
-            padding: 10px 4px;
-            font-size: 0.85rem;
+        .management-block:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        /* 画像「1000022352.png」の崩れを解消するため、4列・3列の無理な配置から、美しい「2列（2カラム）のグリッド構造」へ刷新 */
+        .management-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr; /* 均等に2分割 */
+            gap: 8px;
+            width: 100%;
+            margin-top: 6px;
+        }
+        
+        .management-controls button {
+            width: 100%;
+            height: 44px; /* タップしやすい標準高さを確保 */
+            padding: 4px 8px;
+            font-size: 0.85rem; /* 13pt基準の視認性を保ちつつ、2列に美しく収まるサイズ */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-family: var(--font-family);
+            white-space: nowrap; /* 不自然な途中改行を完全に防止 */
         }
 
         /* アクションボタン（最下部の生成ボタンを大きく押しやすく） */
@@ -199,11 +219,8 @@
             background-color: #555;
             color: white;
             border: none;
-            padding: 10px 12px;
             border-radius: 6px;
             cursor: pointer;
-            font-family: var(--font-family);
-            font-size: 0.9rem;
         }
         button.sub-btn:active {
             background-color: #666;
@@ -215,7 +232,7 @@
             background-color: #b33636;
         }
 
-        /* 出力モーダル（スマートフォン画面全域にフィットするように調整） */
+        /* 出力モーダル */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -280,17 +297,37 @@
 <div class="container">
     <h1>まんがプロンプトビルダー for Gemini</h1>
 
-    <div class="history-area">
-        <div class="form-group" style="margin-bottom: 6px;">
-            <label for="historySelect">じどう保存された れきし:</label>
-            <select id="historySelect">
-                <option value="">-- もどしたい時につかう --</option>
-            </select>
+    <!-- 保存と管理エリア（グリッド2列配置へ最適化し、不自然な改行を完全追放） -->
+    <div class="management-area">
+        <!-- 1. じどう保存のブロック -->
+        <div class="management-block">
+            <div class="form-group" style="margin-bottom: 4px;">
+                <label for="historySelect">じどう保存された れきし:</label>
+                <select id="historySelect">
+                    <option value="">-- もどしたい時につかう --</option>
+                </select>
+            </div>
+            <div class="management-controls">
+                <button type="button" class="sub-btn" onclick="loadHistory()">もどす</button>
+                <button type="button" class="sub-btn" onclick="renameHistory()">名前の変更</button>
+                <button type="button" class="sub-btn danger-btn" onclick="deleteHistory()">けす</button>
+                <button type="button" class="sub-btn danger-btn" style="background-color: #6e1e1e;" onclick="clearAllHistory()">れきしを一括削除</button>
+            </div>
         </div>
-        <div class="history-controls">
-            <button type="button" class="sub-btn" onclick="loadHistory()">もどす</button>
-            <button type="button" class="sub-btn" onclick="renameHistory()">名前をかえる</button>
-            <button type="button" class="sub-btn danger-btn" onclick="deleteHistory()">けす</button>
+
+        <!-- 2. ★お気に入り固定保存のブロック -->
+        <div class="management-block" style="padding-top: 6px;">
+            <div class="form-group" style="margin-bottom: 4px;">
+                <label for="favoriteSelect">★ お気に入り固定保存（ずっと残るよ）:</label>
+                <select id="favoriteSelect">
+                    <option value="">-- お気に入りを選ぶ --</option>
+                </select>
+            </div>
+            <div class="management-controls">
+                <button type="button" class="sub-btn" style="background-color: #c49a45; color: #fff;" onclick="saveToFavorites()">お気に入りに保存</button>
+                <button type="button" class="sub-btn" onclick="loadFavorite()">よびだす</button>
+                <button type="button" class="sub-btn danger-btn" onclick="deleteFavorite()">お気に入りをけす</button>
+            </div>
         </div>
     </div>
 
@@ -319,14 +356,15 @@
 
             <div class="form-group">
                 <label for="additional_notes">もっとこだわりたいこと（追加のめいれい）：</label>
+                <!-- スイッチ式ON/OFFボタン。文字の自動ちぎれ・折り返しをCSSで完全に防止済み -->
                 <div class="tag-buttons">
-                    <button type="button" class="tag-btn" onclick="insertTag(' --ar 2:4')">📱 スマホ画面サイズにする [--ar 2:4]</button>
-                    <button type="button" class="tag-btn" onclick="insertTag(' --ar 2:3')">📖 週刊誌サイズにする [--ar 2:3]</button>
-                    <button type="button" class="tag-btn" onclick="insertTag(' --ar 3:2')">💻 よこ長画面サイズにする [--ar 3:2]</button>
-                    <button type="button" class="tag-btn" onclick="insertTag(' --niji 6')">✨ アニメっぽくする [--niji 6]</button>
-                    <button type="button" class="tag-btn" onclick="insertTag(', slanted panel borders, dynamic diagonal layout, dramatic panel compositions')">📐 大迫力のななめコマにする (Slanted Borders)</button>
-                    <button type="button" class="tag-btn" onclick="insertTag(', stylized comic book pop-art onomatopoeia, bold English action text SFX')">💥 英語のドカーン文字を入れる (POP SFX)</button>
-                    <button type="button" class="tag-btn" onclick="insertTag(', charming child hand-drawn speech bubbles, soft whimsical round dialogue frames')">💬 手書きの丸いフキダシにする (Hand-drawn Bubbles)</button>
+                    <button type="button" class="tag-btn" id="btn_ar24" data-tag=" --ar 2:4" onclick="toggleTagButton(this)">📱 スマホ画面サイズにする [--ar 2:4]</button>
+                    <button type="button" class="tag-btn" id="btn_ar23" data-tag=" --ar 2:3" onclick="toggleTagButton(this)">📖 週刊誌サイズにする [--ar 2:3]</button>
+                    <button type="button" class="tag-btn" id="btn_ar32" data-tag=" --ar 3:2" onclick="toggleTagButton(this)">💻 よこ長画面サイズにする [--ar 3:2]</button>
+                    <button type="button" class="tag-btn" id="btn_niji6" data-tag=" --niji 6" onclick="toggleTagButton(this)">✨ アニメっぽくする [--niji 6]</button>
+                    <button type="button" class="tag-btn" id="btn_slanted" data-tag=", slanted panel borders, dynamic diagonal layout, dramatic panel compositions" onclick="toggleTagButton(this)">📐 大迫力のななめコマにする (Slanted Borders)</button>
+                    <button type="button" class="tag-btn" id="btn_popsfx" data-tag=", stylized comic book pop-art onomatopoeia, bold English action text SFX" onclick="toggleTagButton(this)">💥 英語のドカーン文字を入れる (POP SFX)</button>
+                    <button type="button" class="tag-btn" id="btn_bubbles" data-tag=", charming child hand-drawn speech bubbles, soft whimsical round dialogue frames" onclick="toggleTagButton(this)">💬 手書きの丸いフキダシにする (Hand-drawn Bubbles)</button>
                 </div>
                 <textarea id="additional_notes" rows="2" placeholder="特別なカメラの角度や、かきこみたいことがあれば自由に入力してね。"></textarea>
             </div>
@@ -361,7 +399,7 @@
 
 <script>
     // --------------------------------------------------------
-    // 選ぶだけでワクワクする16種類の絵柄定義
+    // 16種類の絵柄定義
     // --------------------------------------------------------
     const DATA_STYLE = {
         "ゆるキャラ風": "yuru-chara style, cute mascot, simplified vector",
@@ -382,7 +420,6 @@
         "ピクセルアート風": "8bit pixel art style, retro video game aesthetic"
     };
 
-    // 十字分割を強力に抑制し、日本の美しい縦4コマ並びを引き出す最適化英語指示
     const DATA_LAYOUT = {
         "4コマ構成（日本の縦並び・おすすめ！）": "vertical 4-panel comic strip, arranged sequentially from top to bottom in a single column",
         "3コマ（ちょっと短め）": "3-panel comic layout, clean frames",
@@ -398,6 +435,8 @@
         document.getElementById('panel_layout').value = "4コマ構成（日本の縦並び・おすすめ！）";
 
         updateHistoryCombo();
+        updateFavoriteCombo();
+        syncTagButtonsWithTextarea();
     });
 
     function initSelectOptions(elementId, keys) {
@@ -410,13 +449,51 @@
         });
     }
 
-    function insertTag(tag) {
+    // --------------------------------------------------------
+    // スイッチON/OFF式タグボタン制御（画面のガタつき移動・スクロールを完全治療）
+    // --------------------------------------------------------
+    function toggleTagButton(btn) {
         const textarea = document.getElementById('additional_notes');
-        textarea.value += tag;
-        textarea.focus();
+        const tagText = btn.getAttribute('data-tag');
+        
+        if (btn.classList.contains('active')) {
+            // OFFにする
+            btn.classList.remove('active');
+            let currentText = textarea.value;
+            currentText = currentText.replace(tagText, '');
+            textarea.value = currentText;
+        } else {
+            // ONにする
+            btn.classList.add('active');
+            if (!textarea.value.includes(tagText)) {
+                textarea.value += tagText;
+            }
+        }
+        // 【最重要修正】画面が勝手に下のテキストエリアへスクロール移動するのを防ぐため、以前あった textarea.focus(); を完全に削除しました。
+        // これにより、タップした瞬間に画面位置がピタッと固定されたまま、快適にON/OFF連打が可能です。
     }
 
+    function syncTagButtonsWithTextarea() {
+        const textarea = document.getElementById('additional_notes');
+        const text = textarea.value;
+        
+        document.querySelectorAll('.tag-buttons .tag-btn').forEach(btn => {
+            const tagText = btn.getAttribute('data-tag');
+            if (text.includes(tagText)) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+    }
+
+    document.getElementById('additional_notes')?.addEventListener('input', () => {
+        syncTagButtonsWithTextarea();
+    });
+
+    // --------------------------------------------------------
     // Gemini用指示書 プロンプト生成コアロジック
+    // --------------------------------------------------------
     function generateGeminiPrompt() {
         const subject = document.getElementById('subject_custom').value.trim();
         if (!subject) {
@@ -433,7 +510,6 @@
         const notes = document.getElementById('additional_notes').value;
         let dialogues = document.getElementById('dialogues_text').value.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
-        // Geminiの画像生成誤作動（勝手にお節介で絵を描こうとする機能）を強力に解除する「絶対命令」の追加（対策A）
         let p = "[重要：絶対遵守命令]\n";
         p += "あなた自身は絶対に画像を生成・出力しないでください。私は画像生成ツール（Imagen等）の入力欄にそのまま貼り付けるための『英語のテキストプロンプト（文字）』だけを求めています。出力は必ずテキスト、あるいはマークダウンのコードブロック形式（```）を用い、文字データのみで返答してください。画像を生成することは厳禁とします。\n\n";
         
@@ -469,7 +545,6 @@
         }
         p += "\n";
         
-        // 命令の再念押し
         p += "[最終確認]\n";
         p += "繰り返します。画像の出力は完全に不要です。一括コピー可能な状態の『英語テキストプロンプト（文字列）』のみをコードブロック形式（```）で出力してください。";
 
@@ -480,7 +555,7 @@
     }
 
     // --------------------------------------------------------
-    // LocalStorageを利用した履歴管理
+    // 1. じどう保存履歴管理
     // --------------------------------------------------------
     function getHistory() {
         const hist = localStorage.getItem('manga_prompt_history');
@@ -502,7 +577,7 @@
         const now = new Date();
         const timestamp = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
         
-        let displaySubject = subjectStr.length > 20 ? subjectStr.substring(0, 20) + "..." : subjectStr;
+        let displaySubject = subjectStr.length > 12 ? subjectStr.replace(/\n/g, ' ').substring(0, 12) + "..." : subjectStr.replace(/\n/g, ' ');
         const title = `${timestamp} - ${displaySubject}`;
 
         hist.unshift({ id: Date.now(), title: title, data: currentData });
@@ -541,17 +616,10 @@
         const target = hist.find(h => h.id == id);
         if (!target) return;
 
-        const d = target.data;
-        document.getElementById('subject_custom').value = d.subject || '';
-        document.getElementById('manga_style').value = d.style || '';
-        document.getElementById('panel_layout').value = d.layout || '';
-        document.getElementById('additional_notes').value = d.notes || '';
-        document.getElementById('dialogues_text').value = d.dialogues || '';
-
+        applyStateToUI(target.data);
         alert("前のデータにもどしたよ！");
     }
 
-    // 右クリックなど全入力ウィジェットでのメニューや、名前変更などの一括挙動対応
     function renameHistory() {
         const id = document.getElementById('historySelect').value;
         if (!id) return;
@@ -581,6 +649,97 @@
         }
     }
 
+    function clearAllHistory() {
+        if (confirm("【ご注意】じどう保存された「れきし」をぜんぶ消してもいい？\n（★お気に入りは消えません）")) {
+            localStorage.removeItem('manga_prompt_history');
+            updateHistoryCombo();
+            alert("れきしをすべてクリアしたよ！");
+        }
+    }
+
+    // --------------------------------------------------------
+    // 2. ★お気に入り固定保存の管理システム
+    // --------------------------------------------------------
+    function getFavorites() {
+        const favs = localStorage.getItem('manga_prompt_favorites');
+        return favs ? JSON.parse(favs) : [];
+    }
+
+    function saveFavoritesList(list) {
+        localStorage.setItem('manga_prompt_favorites', JSON.stringify(list));
+    }
+
+    function saveToFavorites() {
+        const subject = document.getElementById('subject_custom').value.trim();
+        if (!subject) {
+            alert("お気に入りに登録する前に、主人公や設定を入力してね！");
+            return;
+        }
+
+        let displaySubject = subject.length > 12 ? subject.replace(/\n/g, ' ').substring(0, 12) + "..." : subject.replace(/\n/g, ' ');
+        const favName = prompt("お気に入りのなまえをつけてね：", `★ ${displaySubject}`);
+        
+        if (!favName || !favName.trim()) return;
+
+        const currentData = getCurrentState();
+        let favs = getFavorites();
+
+        favs.unshift({ id: Date.now(), title: favName.trim(), data: currentData });
+        saveFavoritesList(favs);
+        updateFavoriteCombo();
+        alert(`「${favName}」をお気に入りに固定保存したよ！`);
+    }
+
+    function updateFavoriteCombo() {
+        const select = document.getElementById('favoriteSelect');
+        select.innerHTML = '<option value="">-- お気に入りを選ぶ --</option>';
+        
+        const favs = getFavorites();
+        favs.forEach(f => {
+            const opt = document.createElement('option');
+            opt.value = f.id;
+            opt.textContent = f.title;
+            select.appendChild(opt);
+        });
+    }
+
+    function loadFavorite() {
+        const id = document.getElementById('favoriteSelect').value;
+        if (!id) return;
+
+        const favs = getFavorites();
+        const target = favs.find(f => f.id == id);
+        if (!target) return;
+
+        applyStateToUI(target.data);
+        alert(`お気に入り「${target.title}」をよびだしたよ！`);
+    }
+
+    function deleteFavorite() {
+        const id = document.getElementById('favoriteSelect').value;
+        if (!id) return;
+
+        const favs = getFavorites();
+        const target = favs.find(f => f.id == id);
+        if (!target) return;
+
+        if (confirm(`お気に入り「${target.title}」を消してもいい？`)) {
+            let updatedFavs = favs.filter(f => f.id != id);
+            saveFavoritesList(updatedFavs);
+            updateFavoriteCombo();
+        }
+    }
+
+    function applyStateToUI(d) {
+        document.getElementById('subject_custom').value = d.subject || '';
+        document.getElementById('manga_style').value = d.style || '';
+        document.getElementById('panel_layout').value = d.layout || '';
+        document.getElementById('additional_notes').value = d.notes || '';
+        document.getElementById('dialogues_text').value = d.dialogues || '';
+
+        syncTagButtonsWithTextarea();
+    }
+
     // --------------------------------------------------------
     // モーダル・クリップボード制御
     // --------------------------------------------------------
@@ -605,9 +764,6 @@
         }
     }
 
-    // --------------------------------------------------------
-    // PWA: Service Workerの登録処理
-    // --------------------------------------------------------
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('./sw.js')
