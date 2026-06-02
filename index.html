@@ -26,7 +26,7 @@
             --font-size: 13pt; /* 共通ルールに従い、一貫性を持たせた基準サイズ13pt */
         }
 
-        /* スマホ向けにスクロールバー的バウンスを抑制、タップハイライトをクリア */
+        /* スマホ向けにスクロールバーのバウンスを抑制、タップハイライトをクリア */
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
@@ -106,7 +106,7 @@
 
         /* selectコントロールのスマホ向け矢印デザイン調整 */
         select {
-            background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23f0f0f0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23f0f0f0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
             background-repeat: no-repeat;
             background-position: right 12px center;
             background-size: 16px;
@@ -122,11 +122,11 @@
             resize: vertical;
         }
 
-        /* 追加のめいれいボタンエリア（画面外へのはみ出しを防ぐため、スマホ幅に最適化した1列の縦並び） */
+        /* 追加のめいれいボタンエリア（画面外へのはみ出しを防ぎ、スマホ幅に最適化した1列の縦並びブロック配置） */
         .tag-buttons {
             margin-bottom: 8px;
             display: flex;
-            flex-direction: column; /* 縦並びに固定 */
+            flex-direction: column; /* 完全に縦並びに固定 */
             gap: 8px;
             width: 100%;
         }
@@ -140,7 +140,8 @@
             cursor: pointer;
             font-family: var(--font-family);
             font-size: 0.95rem;
-            text-align: center;
+            text-align: left; /* 左寄せにしてスマホでの視認性を強化 */
+            padding-left: 16px;
             width: 100%;
             box-sizing: border-box;
             transition: background-color 0.2s ease;
@@ -297,7 +298,6 @@
         <fieldset>
             <legend>★ まんがの基本設定（どんな世界にする？）</legend>
             
-            <!-- 3行ほどの十分な縦幅をとり、複数キャラを入力しやすくした登場人物欄 -->
             <div class="form-group">
                 <label for="subject_custom">まんがの主人公や登場人物（だれが でてくる？）：</label>
                 <textarea id="subject_custom" rows="3" placeholder="例：&#10;シズク（ジト目で大人しいダウナー系の少女）&#10;ビルダーくん（アプリの妖精。優しく教えてくれるマスコット）" required></textarea>
@@ -319,12 +319,14 @@
 
             <div class="form-group">
                 <label for="additional_notes">もっとこだわりたいこと（追加のめいれい）：</label>
-                <!-- スマホ画面からはみ出さないよう、完全に縦並びブロックに再編したボタン配置 -->
                 <div class="tag-buttons">
                     <button type="button" class="tag-btn" onclick="insertTag(' --ar 2:4')">📱 スマホ画面サイズにする [--ar 2:4]</button>
                     <button type="button" class="tag-btn" onclick="insertTag(' --ar 2:3')">📖 週刊誌サイズにする [--ar 2:3]</button>
                     <button type="button" class="tag-btn" onclick="insertTag(' --ar 3:2')">💻 よこ長画面サイズにする [--ar 3:2]</button>
                     <button type="button" class="tag-btn" onclick="insertTag(' --niji 6')">✨ アニメっぽくする [--niji 6]</button>
+                    <button type="button" class="tag-btn" onclick="insertTag(', slanted panel borders, dynamic diagonal layout, dramatic panel compositions')">📐 大迫力のななめコマにする (Slanted Borders)</button>
+                    <button type="button" class="tag-btn" onclick="insertTag(', stylized comic book pop-art onomatopoeia, bold English action text SFX')">💥 英語のドカーン文字を入れる (POP SFX)</button>
+                    <button type="button" class="tag-btn" onclick="insertTag(', charming child hand-drawn speech bubbles, soft whimsical round dialogue frames')">💬 手書きの丸いフキダシにする (Hand-drawn Bubbles)</button>
                 </div>
                 <textarea id="additional_notes" rows="2" placeholder="特別なカメラの角度や、かきこみたいことがあれば自由に入力してね。"></textarea>
             </div>
@@ -431,12 +433,12 @@
         const notes = document.getElementById('additional_notes').value;
         let dialogues = document.getElementById('dialogues_text').value.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
-        // Geminiの画像生成誤作動（勝手にお節介で絵を描こうとする機能）を強制解除する「絶対命令」の追加
+        // Geminiの画像生成誤作動（勝手にお節介で絵を描こうとする機能）を強力に解除する「絶対命令」の追加（対策A）
         let p = "[重要：絶対遵守命令]\n";
         p += "あなた自身は絶対に画像を生成・出力しないでください。私は画像生成ツール（Imagen等）の入力欄にそのまま貼り付けるための『英語のテキストプロンプト（文字）』だけを求めています。出力は必ずテキスト、あるいはマークダウンのコードブロック形式（```）を用い、文字データのみで返答してください。画像を生成することは厳禁とします。\n\n";
         
         p += "あなたはプロの漫画原作者であり、画像生成AIの高度なプロンプトエンジニアです。\n";
-        p += "入力された【登場人物の設定】と【セリフ】の整合性を深く読み解き、最適な『全体のふんいき』『配色』『キャラクターのオーラ・内面演出』を行間に合わせて自動で推測・補完して、最高品質の指示書を組み立ててください。\n\n";
+        p += "入力された【登場人物の設定】と【セリフ】の整合性を深く読み解き、最適な『全体のふんいいき』『配色』『キャラクターのオーラ・内面演出』を行間に合わせて自動で推測・補完して、最高品質の指示書を組み立ててください。\n\n";
         
         p += "【必須要件・コマ割りのルール】\n";
         p += "1. 各ページ内のコマ配置や構図は、読者の視線が「右から左、上から下へ」自然に誘導されるように設計すること。\n";
@@ -469,7 +471,7 @@
         
         // 命令の再念押し
         p += "[最終確認]\n";
-        p += "繰り返します。画像の出力は完全に不要です。一括コピー可能な状態の『英語テキストプロンプト（文字列）』のみを出力してください。";
+        p += "繰り返します。画像の出力は完全に不要です。一括コピー可能な状態の『英語テキストプロンプト（文字列）』のみをコードブロック形式（```）で出力してください。";
 
         document.getElementById('outputText').value = p;
         openModal();
@@ -549,6 +551,7 @@
         alert("前のデータにもどしたよ！");
     }
 
+    // 右クリックなど全入力ウィジェットでのメニューや、名前変更などの一括挙動対応
     function renameHistory() {
         const id = document.getElementById('historySelect').value;
         if (!id) return;
