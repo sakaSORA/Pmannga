@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=no">
-    <title>まんがプロンプトビルダー for Gemini</title>
+    <title>漫画プロンプトビルダー for Gemini</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#4a90e2">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -131,7 +131,7 @@
             border-radius: 6px;
             cursor: pointer;
             font-family: var(--font-family);
-            font-size: 0.88rem; /* 13ptベースからボタン幅に合わせて綺麗に収まる微調整 */
+            font-size: 0.88rem;
             text-align: left;
             width: 100%;
             box-sizing: border-box;
@@ -143,6 +143,39 @@
         
         /* スイッチがON（アクティブ）になったときの鮮やかなスタイル */
         .tag-btn.active {
+            background-color: #1b4d3e;
+            color: var(--accent-active);
+            border-color: var(--accent-active);
+            font-weight: bold;
+        }
+
+        /* カラー/白黒の明示的指定用の均等2列グリッドレイアウト */
+        .color-mode-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            width: 100%;
+            margin-top: 4px;
+        }
+
+        .color-btn {
+            background-color: #444;
+            color: #fff;
+            border: 1px solid var(--border-color);
+            height: 44px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: var(--font-family);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .color-btn.active {
             background-color: #1b4d3e;
             color: var(--accent-active);
             border-color: var(--accent-active);
@@ -170,7 +203,7 @@
             padding-bottom: 0;
         }
 
-        /* 画像「1000022352.png」の崩れを解消するため、4列・3列の無理な配置から、美しい「2列（2カラム）のグリッド構造」へ刷新 */
+        /* 美しい「2列（2カラム）のグリッド構造」 */
         .management-controls {
             display: grid;
             grid-template-columns: 1fr 1fr; /* 均等に2分割 */
@@ -183,7 +216,7 @@
             width: 100%;
             height: 44px; /* タップしやすい標準高さを確保 */
             padding: 4px 8px;
-            font-size: 0.85rem; /* 13pt基準の視認性を保ちつつ、2列に美しく収まるサイズ */
+            font-size: 0.85rem;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -192,7 +225,7 @@
             white-space: nowrap; /* 不自然な途中改行を完全に防止 */
         }
 
-        /* アクションボタン（最下部の生成ボタンを大きく押しやすく） */
+        /* アクションボタン */
         .actions {
             margin-top: 20px;
             width: 100%;
@@ -295,88 +328,92 @@
 <body>
 
 <div class="container">
-    <h1>まんがプロンプトビルダー for Gemini</h1>
+    <h1>漫画プロンプトビルダー for Gemini</h1>
 
-    <!-- 保存と管理エリア（グリッド2列配置へ最適化し、不自然な改行を完全追放） -->
     <div class="management-area">
-        <!-- 1. じどう保存のブロック -->
         <div class="management-block">
             <div class="form-group" style="margin-bottom: 4px;">
-                <label for="historySelect">じどう保存された れきし:</label>
+                <label for="historySelect">自動保存データの再利用:</label>
                 <select id="historySelect">
-                    <option value="">-- もどしたい時につかう --</option>
+                    <option value="">-- 履歴表示 --</option>
                 </select>
             </div>
             <div class="management-controls">
-                <button type="button" class="sub-btn" onclick="loadHistory()">もどす</button>
-                <button type="button" class="sub-btn" onclick="renameHistory()">名前の変更</button>
-                <button type="button" class="sub-btn danger-btn" onclick="deleteHistory()">けす</button>
-                <button type="button" class="sub-btn danger-btn" style="background-color: #6e1e1e;" onclick="clearAllHistory()">れきしを一括削除</button>
+                <button type="button" class="sub-btn" onclick="loadHistory()">適用・復元</button>
+                <button type="button" class="sub-btn" onclick="renameHistory()">名前変更</button>
+                <button type="button" class="sub-btn danger-btn" onclick="deleteHistory()">削除</button>
+                <button type="button" class="sub-btn danger-btn" style="background-color: #6e1e1e;" onclick="clearAllHistory()">履歴一括クリア</button>
             </div>
         </div>
 
-        <!-- 2. ★お気に入り固定保存のブロック -->
         <div class="management-block" style="padding-top: 6px;">
             <div class="form-group" style="margin-bottom: 4px;">
-                <label for="favoriteSelect">★ お気に入り固定保存（ずっと残るよ）:</label>
+                <label for="favoriteSelect">★ 固定保存リスト（お気に入り）:</label>
                 <select id="favoriteSelect">
                     <option value="">-- お気に入りを選ぶ --</option>
                 </select>
             </div>
             <div class="management-controls">
-                <button type="button" class="sub-btn" style="background-color: #c49a45; color: #fff;" onclick="saveToFavorites()">お気に入りに保存</button>
-                <button type="button" class="sub-btn" onclick="loadFavorite()">よびだす</button>
-                <button type="button" class="sub-btn danger-btn" onclick="deleteFavorite()">お気に入りをけす</button>
+                <button type="button" class="sub-btn" style="background-color: #c49a45; color: #fff;" onclick="saveToFavorites()">リストに保存</button>
+                <button type="button" class="sub-btn" onclick="loadFavorite()">読込呼び出し</button>
+                <button type="button" class="sub-btn danger-btn" onclick="deleteFavorite()">リストから削除</button>
             </div>
         </div>
     </div>
 
     <form id="promptForm" onsubmit="return false;">
         <fieldset>
-            <legend>★ まんがの基本設定（どんな世界にする？）</legend>
+            <legend>★ 世界観・スタイルの設定</legend>
             
             <div class="form-group">
-                <label for="subject_custom">まんがの主人公や登場人物（だれが でてくる？）：</label>
+                <label for="subject_custom">登場人物・キャラクター設定（複数行入力可能）：</label>
                 <textarea id="subject_custom" rows="3" placeholder="例：&#10;シズク（ジト目で大人しいダウナー系の少女）&#10;ビルダーくん（アプリの妖精。優しく教えてくれるマスコット）" required></textarea>
             </div>
 
             <div class="form-group">
-                <label for="manga_style">絵のスタイル（タッチ）：</label>
+                <label for="manga_style">作画スタイル（タッチ）：</label>
                 <select id="manga_style"></select>
             </div>
         </fieldset>
 
         <fieldset>
-            <legend>📖 ページの組み立て</legend>
+            <legend>📖 構成・ページの組み立て</legend>
 
             <div class="form-group">
-                <label for="panel_layout">コマの数・ならび方：</label>
+                <label for="panel_layout">コマ数・コマ割り構成：</label>
                 <select id="panel_layout"></select>
             </div>
 
             <div class="form-group">
-                <label for="additional_notes">もっとこだわりたいこと（追加のめいれい）：</label>
-                <!-- スイッチ式ON/OFFボタン。文字の自動ちぎれ・折り返しをCSSで完全に防止済み -->
-                <div class="tag-buttons">
-                    <button type="button" class="tag-btn" id="btn_ar24" data-tag=" --ar 2:4" onclick="toggleTagButton(this)">📱 スマホ画面サイズにする [--ar 2:4]</button>
-                    <button type="button" class="tag-btn" id="btn_ar23" data-tag=" --ar 2:3" onclick="toggleTagButton(this)">📖 週刊誌サイズにする [--ar 2:3]</button>
-                    <button type="button" class="tag-btn" id="btn_ar32" data-tag=" --ar 3:2" onclick="toggleTagButton(this)">💻 よこ長画面サイズにする [--ar 3:2]</button>
-                    <button type="button" class="tag-btn" id="btn_niji6" data-tag=" --niji 6" onclick="toggleTagButton(this)">✨ アニメっぽくする [--niji 6]</button>
-                    <button type="button" class="tag-btn" id="btn_slanted" data-tag=", slanted panel borders, dynamic diagonal layout, dramatic panel compositions" onclick="toggleTagButton(this)">📐 大迫力のななめコマにする (Slanted Borders)</button>
-                    <button type="button" class="tag-btn" id="btn_popsfx" data-tag=", stylized comic book pop-art onomatopoeia, bold English action text SFX" onclick="toggleTagButton(this)">💥 英語のドカーン文字を入れる (POP SFX)</button>
-                    <button type="button" class="tag-btn" id="btn_bubbles" data-tag=", charming child hand-drawn speech bubbles, soft whimsical round dialogue frames" onclick="toggleTagButton(this)">💬 手書きの丸いフキダシにする (Hand-drawn Bubbles)</button>
+                <label>出力カラーの選択：</label>
+                <div class="color-mode-controls">
+                    <button type="button" class="color-btn" id="mode_color" onclick="selectColorMode('color')">🎨 フルカラー表示</button>
+                    <button type="button" class="color-btn" id="mode_mono" onclick="selectColorMode('mono')">⿊白（モノクロ原稿）</button>
                 </div>
-                <textarea id="additional_notes" rows="2" placeholder="特別なカメラの角度や、かきこみたいことがあれば自由に入力してね。"></textarea>
             </div>
 
             <div class="form-group">
-                <label for="dialogues_text">セリフ・キャラクターの言葉（改行してね）：</label>
+                <label for="additional_notes">追加オプション（特殊効果・アスペクト比指定）：</label>
+                <div class="tag-buttons">
+                    <button type="button" class="tag-btn" id="btn_ar24" data-tag=" --ar 2:4" onclick="toggleTagButton(this)">📱 スマホ画面サイズ指定 [--ar 2:4]</button>
+                    <button type="button" class="tag-btn" id="btn_ar23" data-tag=" --ar 2:3" onclick="toggleTagButton(this)">📖 週刊誌サイズ指定 [--ar 2:3]</button>
+                    <button type="button" class="tag-btn" id="btn_ar32" data-tag=" --ar 3:2" onclick="toggleTagButton(this)">💻 よこ長画面サイズ指定 [--ar 3:2]</button>
+                    <button type="button" class="tag-btn" id="btn_niji6" data-tag=" --niji 6" onclick="toggleTagButton(this)">✨ アニメーション風表現 [--niji 6]</button>
+                    <button type="button" class="tag-btn" id="btn_slanted" data-tag=", slanted panel borders, dynamic diagonal layout, dramatic panel compositions" onclick="toggleTagButton(this)">📐 大迫力のななめコマ (Slanted Borders)</button>
+                    <button type="button" class="tag-btn" id="btn_popsfx" data-tag=", stylized comic book pop-art onomatopoeia, bold English action text SFX" onclick="toggleTagButton(this)">💥 英語の描き文字・効果音 (POP SFX)</button>
+                    <button type="button" class="tag-btn" id="btn_bubbles" data-tag=", charming child hand-drawn speech bubbles, soft whimsical round dialogue frames" onclick="toggleTagButton(this)">💬 手書き風の丸型フキダシ (Hand-drawn Bubbles)</button>
+                </div>
+                <textarea id="additional_notes" rows="2" placeholder="特別なアングル指定など、こだわりたい命令があれば自由に入力してください。"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="dialogues_text">台詞・キャラクターのセリフ（改行入力）：</label>
                 <textarea id="dialogues_text" rows="6" placeholder="「よしっ、いくぞ！」&#10;「うわっ！前がみえないぞ！？」&#10;「なんとかなるさ！」&#10;「大せいこう！」"></textarea>
             </div>
         </fieldset>
 
         <div class="actions">
-            <button type="button" class="main-btn" onclick="generateGeminiPrompt()">AI用の指示書（プロンプト）をつくる！</button>
+            <button type="button" class="main-btn" onclick="generateGeminiPrompt()">AI専用の指示書（プロンプト）を生成する！</button>
         </div>
     </form>
 </div>
@@ -384,15 +421,15 @@
 <div class="modal-overlay" id="outputModal">
     <div class="modal-box">
         <div class="modal-header">
-            <div class="modal-title">できたよ！AIにわたす指示書</div>
+            <div class="modal-title">生成完了：AI用指示書</div>
             <button type="button" class="sub-btn" style="padding: 6px 12px;" onclick="closeModal()">✕</button>
         </div>
         <div class="modal-body">
             <textarea id="outputText" readonly></textarea>
         </div>
         <div class="modal-footer">
-            <button type="button" class="sub-btn" style="background-color: var(--accent-color);" onclick="copyToClipboard()">コピーする</button>
-            <button type="button" class="sub-btn" onclick="closeModal()">とじる</button>
+            <button type="button" class="sub-btn" style="background-color: var(--accent-color);" onclick="copyToClipboard()">プロンプトをコピー</button>
+            <button type="button" class="sub-btn" onclick="closeModal()">閉じる</button>
         </div>
     </div>
 </div>
@@ -427,6 +464,9 @@
         "大ゴマ ＋ 小コマ（メリハリのある大迫力）": "dynamic panel layout with one large splash panel and smaller secondary panels"
     };
 
+    // グローバルで現在のカラーモードを管理（初期値は未選択＝絵柄準拠）
+    let currentColorMode = ""; 
+
     // UI初期構築
     window.addEventListener('DOMContentLoaded', () => {
         initSelectOptions('manga_style', Object.keys(DATA_STYLE));
@@ -449,28 +489,43 @@
         });
     }
 
-    // --------------------------------------------------------
-    // スイッチON/OFF式タグボタン制御（画面のガタつき移動・スクロールを完全治療）
-    // --------------------------------------------------------
+    // カラーモードボタンスイッチの排他的切り替えロジック（ガタつき移動なし）
+    function selectColorMode(mode) {
+        const btnColor = document.getElementById('mode_color');
+        const btnMono = document.getElementById('mode_mono');
+
+        if (currentColorMode === mode) {
+            currentColorMode = "";
+            btnColor.classList.remove('active');
+            btnMono.classList.remove('active');
+        } else {
+            currentColorMode = mode;
+            if (mode === 'color') {
+                btnColor.classList.add('active');
+                btnMono.classList.remove('active');
+            } else {
+                btnMono.classList.add('active');
+                btnColor.classList.remove('active');
+            }
+        }
+    }
+
+    // スイッチON/OFF式タグボタン制御（ガタつき移動・スクロールを完全排除）
     function toggleTagButton(btn) {
         const textarea = document.getElementById('additional_notes');
         const tagText = btn.getAttribute('data-tag');
         
         if (btn.classList.contains('active')) {
-            // OFFにする
             btn.classList.remove('active');
             let currentText = textarea.value;
             currentText = currentText.replace(tagText, '');
             textarea.value = currentText;
         } else {
-            // ONにする
             btn.classList.add('active');
             if (!textarea.value.includes(tagText)) {
                 textarea.value += tagText;
             }
         }
-        // 【最重要修正】画面が勝手に下のテキストエリアへスクロール移動するのを防ぐため、以前あった textarea.focus(); を完全に削除しました。
-        // これにより、タップした瞬間に画面位置がピタッと固定されたまま、快適にON/OFF連打が可能です。
     }
 
     function syncTagButtonsWithTextarea() {
@@ -497,12 +552,18 @@
     function generateGeminiPrompt() {
         const subject = document.getElementById('subject_custom').value.trim();
         if (!subject) {
-            alert("まんがの主人公や登場人物を入力してね！");
+            alert("登場人物やキャラクター設定を入力してください。");
             return;
         }
 
         const styleKey = document.getElementById('manga_style').value;
-        const style = DATA_STYLE[styleKey] || styleKey;
+        let style = DATA_STYLE[styleKey] || styleKey;
+
+        if (currentColorMode === 'color') {
+            style += ", vibrant full color manga illustration, professionally colored, rich and beautiful color palette";
+        } else if (currentColorMode === 'mono') {
+            style += ", monochrome, black and white manga page, sharp ink lines, professional screentones, highly detailed hand-drawn manga ink art";
+        }
 
         const layoutKey = document.getElementById('panel_layout').value;
         const layout = DATA_LAYOUT[layoutKey] || layoutKey;
@@ -591,13 +652,14 @@
             style: document.getElementById('manga_style').value,
             layout: document.getElementById('panel_layout').value,
             notes: document.getElementById('additional_notes').value,
-            dialogues: document.getElementById('dialogues_text').value
+            dialogues: document.getElementById('dialogues_text').value,
+            colorMode: currentColorMode
         };
     }
 
     function updateHistoryCombo() {
         const select = document.getElementById('historySelect');
-        select.innerHTML = '<option value="">-- もどしたい時につかう --</option>';
+        select.innerHTML = '<option value="">-- 履歴表示 --</option>';
         
         const hist = getHistory();
         hist.forEach(h => {
@@ -617,7 +679,7 @@
         if (!target) return;
 
         applyStateToUI(target.data);
-        alert("前のデータにもどしたよ！");
+        alert("履歴データを復元しました。");
     }
 
     function renameHistory() {
@@ -628,7 +690,7 @@
         const targetIndex = hist.findIndex(h => h.id == id);
         if (targetIndex === -1) return;
 
-        const newTitle = prompt("新しい名前にかえてね:", hist[targetIndex].title);
+        const newTitle = prompt("新しい識別名を指定してください:", hist[targetIndex].title);
         if (newTitle && newTitle.trim()) {
             hist[targetIndex].title = newTitle.trim();
             saveHistoryList(hist);
@@ -641,7 +703,7 @@
         const id = document.getElementById('historySelect').value;
         if (!id) return;
 
-        if (confirm("えらんだ れきし を消してもいい？")) {
+        if (confirm("選択した履歴データを削除しますか？")) {
             let hist = getHistory();
             hist = hist.filter(h => h.id != id);
             saveHistoryList(hist);
@@ -650,10 +712,10 @@
     }
 
     function clearAllHistory() {
-        if (confirm("【ご注意】じどう保存された「れきし」をぜんぶ消してもいい？\n（★お気に入りは消えません）")) {
+        if (confirm("【警告】自動保存されたすべての履歴データを消去しますか？\n（※固定保存リストは削除されません）")) {
             localStorage.removeItem('manga_prompt_history');
             updateHistoryCombo();
-            alert("れきしをすべてクリアしたよ！");
+            alert("履歴データを一括消去しました。");
         }
     }
 
@@ -672,12 +734,12 @@
     function saveToFavorites() {
         const subject = document.getElementById('subject_custom').value.trim();
         if (!subject) {
-            alert("お気に入りに登録する前に、主人公や設定を入力してね！");
+            alert("登録する設定情報が入力されていません。");
             return;
         }
 
         let displaySubject = subject.length > 12 ? subject.replace(/\n/g, ' ').substring(0, 12) + "..." : subject.replace(/\n/g, ' ');
-        const favName = prompt("お気に入りのなまえをつけてね：", `★ ${displaySubject}`);
+        const favName = prompt("お気に入り登録名を指定してください：", `★ ${displaySubject}`);
         
         if (!favName || !favName.trim()) return;
 
@@ -687,7 +749,7 @@
         favs.unshift({ id: Date.now(), title: favName.trim(), data: currentData });
         saveFavoritesList(favs);
         updateFavoriteCombo();
-        alert(`「${favName}」をお気に入りに固定保存したよ！`);
+        alert(`「${favName}」を固定保存リストに登録しました。`);
     }
 
     function updateFavoriteCombo() {
@@ -712,7 +774,7 @@
         if (!target) return;
 
         applyStateToUI(target.data);
-        alert(`お気に入り「${target.title}」をよびだしたよ！`);
+        alert(`固定保存データ「${target.title}」を読み込みました。`);
     }
 
     function deleteFavorite() {
@@ -723,7 +785,7 @@
         const target = favs.find(f => f.id == id);
         if (!target) return;
 
-        if (confirm(`お気に入り「${target.title}」を消してもいい？`)) {
+        if (confirm(`固定保存データ「${target.title}」を削除しますか？`)) {
             let updatedFavs = favs.filter(f => f.id != id);
             saveFavoritesList(updatedFavs);
             updateFavoriteCombo();
@@ -736,6 +798,14 @@
         document.getElementById('panel_layout').value = d.layout || '';
         document.getElementById('additional_notes').value = d.notes || '';
         document.getElementById('dialogues_text').value = d.dialogues || '';
+
+        const mode = d.colorMode || "";
+        selectColorMode(mode);
+        if (mode === "") {
+            currentColorMode = "";
+            document.getElementById('mode_color').classList.remove('active');
+            document.getElementById('mode_mono').classList.remove('active');
+        }
 
         syncTagButtonsWithTextarea();
     }
@@ -754,13 +824,13 @@
         
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(txt)
-                .then(() => alert("クリップボードにコピーしたよ！ AIの画面に貼り付けてね！"))
-                .catch(err => alert("コピーに失敗しちゃった: " + err));
+                .then(() => alert("指示書をクリップボードにコピーしました。AIのチャット欄に貼り付けて送信してください。"))
+                .catch(err => alert("コピーに失敗しました: " + err));
         } else {
             const textArea = document.getElementById('outputText');
             textArea.select();
             document.execCommand('copy');
-            alert("クリップボードにコピーしたよ！ AIの画面に貼り付けてね！");
+            alert("指示書をクリップボードにコピーしました。AIのチャット欄に貼り付けて送信してください。");
         }
     }
 
