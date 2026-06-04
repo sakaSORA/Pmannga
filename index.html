@@ -338,25 +338,25 @@
                     <option value="">-- 履歴表示 --</option>
                 </select>
             </div>
-            <div class="management-controls">
+            <div class="management-controls" style="grid-template-columns: 1fr 1fr;">
                 <button type="button" class="sub-btn" onclick="loadHistory()">適用・復元</button>
-                <button type="button" class="sub-btn" onclick="renameHistory()">名前変更</button>
-                <button type="button" class="sub-btn danger-btn" onclick="deleteHistory()">削除</button>
-                <button type="button" class="sub-btn danger-btn" style="background-color: #6e1e1e;" onclick="clearAllHistory()">履歴一括クリア</button>
+                <button type="button" class="sub-btn danger-btn" onclick="deleteHistory()">履歴から消す</button>
             </div>
         </div>
 
         <div class="management-block" style="padding-top: 6px;">
             <div class="form-group" style="margin-bottom: 4px;">
-                <label for="favoriteSelect">★ 固定保存リスト（お気に入り）:</label>
-                <select id="favoriteSelect">
-                    <option value="">-- お気に入りを選ぶ --</option>
+                <label for="character名鑑Select">👥 キャラクター選択（ボタンで決定）：</label>
+                <select id="character名鑑Select">
+                    <option value="">-- キャラクターを選択 --</option>
                 </select>
             </div>
-            <div class="management-controls">
-                <button type="button" class="sub-btn" style="background-color: #c49a45; color: #fff;" onclick="saveToFavorites()">リストに保存</button>
-                <button type="button" class="sub-btn" onclick="loadFavorite()">読込呼び出し</button>
-                <button type="button" class="sub-btn danger-btn" onclick="deleteFavorite()">リストから削除</button>
+            <div class="management-controls" style="grid-template-columns: 1fr 1fr;">
+                <button type="button" class="sub-btn" style="background-color: #4a90e2; color: #fff; font-weight: bold;" onclick="addSelectedCharacterToTextarea()">設定欄へ合流</button>
+                <button type="button" class="sub-btn danger-btn" onclick="deleteCharacterFromList()">選択キャラ削除</button>
+            </div>
+            <div class="management-controls" style="grid-template-columns: 1fr; margin-top: 6px;">
+                <button type="button" class="sub-btn" style="background-color: #2b753a; color: #fff; font-weight: bold;" onclick="addNewCharacter()">✨ キャラ新規登録</button>
             </div>
         </div>
     </div>
@@ -366,7 +366,7 @@
             <legend>★ 世界観・スタイルの設定</legend>
             
             <div class="form-group">
-                <label for="subject_custom">登場人物・キャラクター設定（複数行入力可能）：</label>
+                <label for="subject_custom">キャラクター設定（複数合流可能）：</label>
                 <textarea id="subject_custom" rows="3" placeholder="例：&#10;シズク（ジト目で大人しいダウナー系の少女）&#10;ビルダーくん（アプリの妖精。優しく教えてくれるマスコット）" required></textarea>
             </div>
 
@@ -403,7 +403,7 @@
                     <button type="button" class="tag-btn" id="btn_popsfx" data-tag=", stylized comic book pop-art onomatopoeia, bold English action text SFX" onclick="toggleTagButton(this)">💥 英語の描き文字・効果音 (POP SFX)</button>
                     <button type="button" class="tag-btn" id="btn_bubbles" data-tag=", charming child hand-drawn speech bubbles, soft whimsical round dialogue frames" onclick="toggleTagButton(this)">💬 手書き風の丸型フキダシ (Hand-drawn Bubbles)</button>
                 </div>
-                <textarea id="additional_notes" rows="2" placeholder="特別なアングル指定など、こだわりたい命令があれば自由に入力してください。"></textarea>
+                <textarea id="additional_notes" rows="2" placeholder="特別なアングル指定など、こだわりたい命令があれば自由入力してください。"></textarea>
             </div>
 
             <div class="form-group">
@@ -435,9 +435,6 @@
 </div>
 
 <script>
-    // --------------------------------------------------------
-    // 16種類の絵柄定義
-    // --------------------------------------------------------
     const DATA_STYLE = {
         "ゆるキャラ風": "yuru-chara style, cute mascot, simplified vector",
         "線が少ないミニマルイラスト": "minimalist illustration, simple clean lines, flat design",
@@ -464,18 +461,15 @@
         "大ゴマ ＋ 小コマ（メリハリのある大迫力）": "dynamic panel layout with one large splash panel and smaller secondary panels"
     };
 
-    // グローバルで現在のカラーモードを管理（初期値は未選択＝絵柄準拠）
     let currentColorMode = ""; 
 
-    // UI初期構築
     window.addEventListener('DOMContentLoaded', () => {
         initSelectOptions('manga_style', Object.keys(DATA_STYLE));
         initSelectOptions('panel_layout', Object.keys(DATA_LAYOUT));
-        
         document.getElementById('panel_layout').value = "4コマ構成（日本の縦並び・おすすめ！）";
 
         updateHistoryCombo();
-        updateFavoriteCombo();
+        updateCharacterCombo(); 
         syncTagButtonsWithTextarea();
     });
 
@@ -489,11 +483,9 @@
         });
     }
 
-    // カラーモードボタンスイッチの排他的切り替えロジック（ガタつき移動なし）
     function selectColorMode(mode) {
         const btnColor = document.getElementById('mode_color');
         const btnMono = document.getElementById('mode_mono');
-
         if (currentColorMode === mode) {
             currentColorMode = "";
             btnColor.classList.remove('active');
@@ -510,11 +502,91 @@
         }
     }
 
-    // スイッチON/OFF式タグボタン制御（ガタつき移動・スクロールを完全排除）
+    // --------------------------------------------------------
+    // 👥 完全ブラウザ内キャッシュ仕様（LocalStorageオンリー）
+    // --------------------------------------------------------
+    function getCharacters() {
+        const chars = localStorage.getItem('manga_prompt_characters');
+        return chars ? JSON.parse(chars) : [];
+    }
+
+    // ファイル出力を一切行わず、純粋にキャッシュにだけ保存する
+    function saveCharactersList(list) {
+        localStorage.setItem('manga_prompt_characters', JSON.stringify(list));
+        updateCharacterCombo();
+    }
+
+    function updateCharacterCombo() {
+        const select = document.getElementById('character名鑑Select');
+        select.innerHTML = '<option value="">-- キャラクターを選択 --</option>';
+        const chars = getCharacters();
+        chars.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.id;
+            opt.textContent = c.name;
+            select.appendChild(opt);
+        });
+    }
+
+    function addNewCharacter() {
+        const charName = prompt("キャラクターの名前を入力してください（例：シズク）：");
+        if (!charName || !charName.trim()) return;
+        const charDetails = prompt("キャラクターの特徴を入力してください（例：ジト目で大人しい少女、白髪）：");
+        if (!charDetails || !charDetails.trim()) return;
+
+        let chars = getCharacters();
+        chars.unshift({
+            id: Date.now(),
+            name: charName.trim(),
+            details: charDetails.trim()
+        });
+        saveCharactersList(chars);
+    }
+
+    function addSelectedCharacterToTextarea() {
+        const select = document.getElementById('character名鑑Select');
+        const id = select.value;
+        if (!id) {
+            alert("設定欄に合流させたいキャラクターをリストからえらんでください。");
+            return;
+        }
+        const chars = getCharacters();
+        const target = chars.find(c => c.id == id);
+        if (!target) return;
+
+        const textarea = document.getElementById('subject_custom');
+        if (textarea.value.trim() !== "") {
+            textarea.value += `\n${target.name}（${target.details}）`;
+        } else {
+            textarea.value = `${target.name}（${target.details}）`;
+        }
+        select.value = "";
+    }
+
+    function deleteCharacterFromList() {
+        const select = document.getElementById('character名鑑Select');
+        const id = select.value;
+        if (!id) {
+            alert("消したいキャラクターを、上のリストからえらんでください。");
+            return;
+        }
+        let chars = getCharacters();
+        const target = chars.find(c => c.id == id);
+        if (!target) return;
+
+        if (confirm(`キャラクター「${target.name}」を名鑑から消去しますか？`)) {
+            let updatedChars = chars.filter(c => c.id != id);
+            saveCharactersList(updatedChars);
+            select.value = ""; 
+        }
+    }
+
+    // --------------------------------------------------------
+    // その他UI制御ロジック
+    // --------------------------------------------------------
     function toggleTagButton(btn) {
         const textarea = document.getElementById('additional_notes');
         const tagText = btn.getAttribute('data-tag');
-        
         if (btn.classList.contains('active')) {
             btn.classList.remove('active');
             let currentText = textarea.value;
@@ -531,7 +603,6 @@
     function syncTagButtonsWithTextarea() {
         const textarea = document.getElementById('additional_notes');
         const text = textarea.value;
-        
         document.querySelectorAll('.tag-buttons .tag-btn').forEach(btn => {
             const tagText = btn.getAttribute('data-tag');
             if (text.includes(tagText)) {
@@ -546,78 +617,6 @@
         syncTagButtonsWithTextarea();
     });
 
-    // --------------------------------------------------------
-    // Gemini用指示書 プロンプト生成コアロジック
-    // --------------------------------------------------------
-    function generateGeminiPrompt() {
-        const subject = document.getElementById('subject_custom').value.trim();
-        if (!subject) {
-            alert("登場人物やキャラクター設定を入力してください。");
-            return;
-        }
-
-        const styleKey = document.getElementById('manga_style').value;
-        let style = DATA_STYLE[styleKey] || styleKey;
-
-        if (currentColorMode === 'color') {
-            style += ", vibrant full color manga illustration, professionally colored, rich and beautiful color palette";
-        } else if (currentColorMode === 'mono') {
-            style += ", monochrome, black and white manga page, sharp ink lines, professional screentones, highly detailed hand-drawn manga ink art";
-        }
-
-        const layoutKey = document.getElementById('panel_layout').value;
-        const layout = DATA_LAYOUT[layoutKey] || layoutKey;
-
-        const notes = document.getElementById('additional_notes').value;
-        let dialogues = document.getElementById('dialogues_text').value.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-
-        let p = "[重要：絶対遵守命令]\n";
-        p += "あなた自身は絶対に画像を生成・出力しないでください。私は画像生成ツール（Imagen等）の入力欄にそのまま貼り付けるための『英語のテキストプロンプト（文字）』だけを求めています。出力は必ずテキスト、あるいはマークダウンのコードブロック形式（```）を用い、文字データのみで返答してください。画像を生成することは厳禁とします。\n\n";
-        
-        p += "あなたはプロの漫画原作者であり、画像生成AIの高度なプロンプトエンジニアです。\n";
-        p += "入力された【登場人物の設定】と【セリフ】の整合性を深く読み解き、最適な『全体のふんいいき』『配色』『キャラクターのオーラ・内面演出』を行間に合わせて自動で推測・補完して、最高品質の指示書を組み立ててください。\n\n";
-        
-        p += "【必須要件・コマ割りのルール】\n";
-        p += "1. 各ページ内のコマ配置や構図は、読者の視線が「右から左、上から下へ」自然に誘導されるように設計すること。\n";
-        p += "2. 各ページのコマの大きさがすべて均等・同一にならないよう、重要度や演出に合わせてコマの大きさにしっかりとメリハリ（大ゴマ・小コマ等の変化）をつけること。(※ただし4コマ構成が指定されているページは除く)\n\n";
-        
-        p += "【出力に関する絶対制約】\n";
-        p += "作成した英語プロンプトは、各コマごとにバラバラに分離して分割出力することを厳禁とします。ユーザーが1クリックで画像生成AIへそのまままとめて投入できるよう、必ず「ページ全体の指示を1つに統合した、一括でコピー可能な状態の英語プロンプト」として1つにまとめて完成させて出力してください。\n\n";
-
-        p += "【全ページ共通設定 (キャラクター・世界観の一貫性保証)】\n";
-        p += `・登場人物・主人公設定: ${subject}\n`;
-        p += `・全体画風（スタイル）: ${style}\n\n`;
-        p += "※上記特徴（服装、髪型、色彩、顔の傾向など）は、プロンプト内でブレずに共通してシームレスに描写されるように英文プロンプトを固定・調整してください。\n\n";
-
-        p += "--------------------------------------------------------\n";
-        p += "【各ページの個別構成データ】\n";
-        p += "--------------------------------------------------------\n";
-        p += "■ 第 1 ページ目\n";
-        p += `  ・コマ構成指定: ${layout}\n`;
-        
-        if (dialogues.trim()) {
-            p += "  ・組み込んでほしいセリフ・会話（※日本語のままで処理すること）:\n";
-            p += "    [重要] 以下のセリフはキャラクターの口調や方言、語気のニュアンスを完璧に保持するため、絶対に英語に翻訳しないでください。生成される英語プロンプト内の吹き出し指定（speech bubble内の指定テキストなど）には、以下の日本語表現をそのままの表記で正確に配置させてください。\n";
-            p += `    ${dialogues}\n`;
-        }
-        
-        if (notes.trim()) {
-            p += `  ・このページの個別補足指示（画面サイズ・アスペクト比など）: ${notes}\n`;
-        }
-        p += "\n";
-        
-        p += "[最終確認]\n";
-        p += "繰り返します。画像の出力は完全に不要です。一括コピー可能な状態の『英語テキストプロンプト（文字列）』のみをコードブロック形式（```）で出力してください。";
-
-        document.getElementById('outputText').value = p;
-        openModal();
-
-        autoSaveHistory(subject);
-    }
-
-    // --------------------------------------------------------
-    // 1. じどう保存履歴管理
-    // --------------------------------------------------------
     function getHistory() {
         const hist = localStorage.getItem('manga_prompt_history');
         return hist ? JSON.parse(hist) : [];
@@ -630,17 +629,13 @@
     function autoSaveHistory(subjectStr) {
         const currentData = getCurrentState();
         let hist = getHistory();
-
         if (hist.length > 0 && JSON.stringify(hist[0].data) === JSON.stringify(currentData)) {
             return;
         }
-
         const now = new Date();
         const timestamp = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
-        
         let displaySubject = subjectStr.length > 12 ? subjectStr.replace(/\n/g, ' ').substring(0, 12) + "..." : subjectStr.replace(/\n/g, ' ');
         const title = `${timestamp} - ${displaySubject}`;
-
         hist.unshift({ id: Date.now(), title: title, data: currentData });
         saveHistoryList(hist);
         updateHistoryCombo();
@@ -660,7 +655,6 @@
     function updateHistoryCombo() {
         const select = document.getElementById('historySelect');
         select.innerHTML = '<option value="">-- 履歴表示 --</option>';
-        
         const hist = getHistory();
         hist.forEach(h => {
             const opt = document.createElement('option');
@@ -673,122 +667,20 @@
     function loadHistory() {
         const id = document.getElementById('historySelect').value;
         if (!id) return;
-
         const hist = getHistory();
         const target = hist.find(h => h.id == id);
         if (!target) return;
-
         applyStateToUI(target.data);
-        alert("履歴データを復元しました。");
-    }
-
-    function renameHistory() {
-        const id = document.getElementById('historySelect').value;
-        if (!id) return;
-
-        let hist = getHistory();
-        const targetIndex = hist.findIndex(h => h.id == id);
-        if (targetIndex === -1) return;
-
-        const newTitle = prompt("新しい識別名を指定してください:", hist[targetIndex].title);
-        if (newTitle && newTitle.trim()) {
-            hist[targetIndex].title = newTitle.trim();
-            saveHistoryList(hist);
-            updateHistoryCombo();
-            document.getElementById('historySelect').value = id;
-        }
     }
 
     function deleteHistory() {
         const id = document.getElementById('historySelect').value;
         if (!id) return;
-
-        if (confirm("選択した履歴データを削除しますか？")) {
+        if (confirm("選択した履歴を消去しますか？")) {
             let hist = getHistory();
             hist = hist.filter(h => h.id != id);
             saveHistoryList(hist);
             updateHistoryCombo();
-        }
-    }
-
-    function clearAllHistory() {
-        if (confirm("【警告】自動保存されたすべての履歴データを消去しますか？\n（※固定保存リストは削除されません）")) {
-            localStorage.removeItem('manga_prompt_history');
-            updateHistoryCombo();
-            alert("履歴データを一括消去しました。");
-        }
-    }
-
-    // --------------------------------------------------------
-    // 2. ★お気に入り固定保存の管理システム
-    // --------------------------------------------------------
-    function getFavorites() {
-        const favs = localStorage.getItem('manga_prompt_favorites');
-        return favs ? JSON.parse(favs) : [];
-    }
-
-    function saveFavoritesList(list) {
-        localStorage.setItem('manga_prompt_favorites', JSON.stringify(list));
-    }
-
-    function saveToFavorites() {
-        const subject = document.getElementById('subject_custom').value.trim();
-        if (!subject) {
-            alert("登録する設定情報が入力されていません。");
-            return;
-        }
-
-        let displaySubject = subject.length > 12 ? subject.replace(/\n/g, ' ').substring(0, 12) + "..." : subject.replace(/\n/g, ' ');
-        const favName = prompt("お気に入り登録名を指定してください：", `★ ${displaySubject}`);
-        
-        if (!favName || !favName.trim()) return;
-
-        const currentData = getCurrentState();
-        let favs = getFavorites();
-
-        favs.unshift({ id: Date.now(), title: favName.trim(), data: currentData });
-        saveFavoritesList(favs);
-        updateFavoriteCombo();
-        alert(`「${favName}」を固定保存リストに登録しました。`);
-    }
-
-    function updateFavoriteCombo() {
-        const select = document.getElementById('favoriteSelect');
-        select.innerHTML = '<option value="">-- お気に入りを選ぶ --</option>';
-        
-        const favs = getFavorites();
-        favs.forEach(f => {
-            const opt = document.createElement('option');
-            opt.value = f.id;
-            opt.textContent = f.title;
-            select.appendChild(opt);
-        });
-    }
-
-    function loadFavorite() {
-        const id = document.getElementById('favoriteSelect').value;
-        if (!id) return;
-
-        const favs = getFavorites();
-        const target = favs.find(f => f.id == id);
-        if (!target) return;
-
-        applyStateToUI(target.data);
-        alert(`固定保存データ「${target.title}」を読み込みました。`);
-    }
-
-    function deleteFavorite() {
-        const id = document.getElementById('favoriteSelect').value;
-        if (!id) return;
-
-        const favs = getFavorites();
-        const target = favs.find(f => f.id == id);
-        if (!target) return;
-
-        if (confirm(`固定保存データ「${target.title}」を削除しますか？`)) {
-            let updatedFavs = favs.filter(f => f.id != id);
-            saveFavoritesList(updatedFavs);
-            updateFavoriteCombo();
         }
     }
 
@@ -798,7 +690,6 @@
         document.getElementById('panel_layout').value = d.layout || '';
         document.getElementById('additional_notes').value = d.notes || '';
         document.getElementById('dialogues_text').value = d.dialogues || '';
-
         const mode = d.colorMode || "";
         selectColorMode(mode);
         if (mode === "") {
@@ -806,13 +697,63 @@
             document.getElementById('mode_color').classList.remove('active');
             document.getElementById('mode_mono').classList.remove('active');
         }
-
         syncTagButtonsWithTextarea();
     }
 
-    // --------------------------------------------------------
-    // モーダル・クリップボード制御
-    // --------------------------------------------------------
+    function generateGeminiPrompt() {
+        const subject = document.getElementById('subject_custom').value.trim();
+        if (!subject) {
+            alert("登場人物やキャラクター設定を入力してください。");
+            return;
+        }
+        const styleKey = document.getElementById('manga_style').value;
+        let style = DATA_STYLE[styleKey] || styleKey;
+        if (currentColorMode === 'color') {
+            style += ", vibrant full color manga illustration, professionally colored, rich and beautiful color palette";
+        } else if (currentColorMode === 'mono') {
+            style += ", monochrome, black and white manga page, sharp ink lines, professional screentones, highly detailed hand-drawn manga ink art";
+        }
+        const layoutKey = document.getElementById('panel_layout').value;
+        const layout = DATA_LAYOUT[layoutKey] || layoutKey;
+        const notes = document.getElementById('additional_notes').value;
+        let dialogues = document.getElementById('dialogues_text').value.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+        let p = "[重要：絶対遵守命令]\n";
+        p += "あなた自身は絶対に画像を生成・出力しないでください。私は画像生成ツール（Imagen等）の入力欄にそのまま貼り付けるための『英語のテキストプロンプト（文字）』だけを求めています。出力は必ずテキスト、あるいはマークダウンのコードブロック形式（```）を用い、文字データのみで返答してください。画像を生成することは厳禁とします。\n\n";
+        p += "あなたはプロの漫画原作者であり、画像生成AIの高度なプロンプトエンジニアです。\n";
+        p += "入力された【登場人物の設定】と【セリフ】の整合性を深く読み解き、最適な『全体のふんいいき』『配色』『キャラクターのオーラ・内面演出』を行間に合わせて自動で推測・補完して、最高品質の指示書を組み立ててください。\n\n";
+        p += "【必須要件・コマ割りのルール】\n";
+        p += "1. 各ページ内のコマ配置や構図は、読者の視線が「右から左、上から下へ」自然に誘導されるように設計すること。\n";
+        p += "2. 各ページのコマの大きさがすべて均等・同一にならないよう、重要度や演出に合わせてコマの大きさにしっかりとメリハリ（大ゴマ・小コマ等の変化）をつけること。(※ただし4コマ構成が指定されているページは除く)\n\n";
+        p += "【出力に関する絶対制約】\n";
+        p += "作成した英語プロンプトは、各コマごとにバラバラに分離して分割出力することを厳禁とします。ユーザーが1クリックで画像生成AIへそのまままとめて投入できるよう、必ず「ページ全体の指示を1つに統合した、一括でコピー可能な状態の英語プロンプト」として1つにまとめて完成させて出力してください。\n\n";
+        p += "【全ページ共通設定 (キャラクター・世界観の一貫性保証)】\n";
+        p += `・登場人物・主人公設定: ${subject}\n`;
+        p += `・全体画風（スタイル）: ${style}\n\n`;
+        p += "※上記特徴（服装、髪型、色彩、顔の傾向など）は、プロンプト内でブレずに共通してシームレスに描写されるように英文プロンプトを固定・調整してください。\n\n";
+        p += "--------------------------------------------------------\n";
+        p += "【各ページの個別構成データ】\n";
+        p += "--------------------------------------------------------\n";
+        p += "■ 第 1 ページ目\n";
+        p += `  ・コマ構成指定: ${layout}\n`;
+        
+        if (dialogues.trim()) {
+            p += "  ・組み込んでほしいセリフ・会話（※日本語のままで処理すること）:\n";
+            p += "    [重要] 以下のセリフはキャラクターの口調や方言、語気のニュアンスを完璧に保持するため、絶対に英語に翻訳しないでください。生成される英語プロンプト内の吹き出し指定（speech bubble内の指定テキストなど）には、以下の日本語表現をそのままの表記で正確に配置させてください。\n";
+            p += `    ${dialogues}\n`;
+        }
+        if (notes.trim()) {
+            p += `  ・このページの個別補足指示（画面サイズ・アスペクト比など）: ${notes}\n`;
+        }
+        p += "\n";
+        p += "[最終確認]\n";
+        p += "繰り返します。画像の出力は完全に不要です。一括コピー可能な状態の『英語テキストプロンプト（文字列）』のみをコードブロック形式（```）で出力してください。";
+
+        document.getElementById('outputText').value = p;
+        openModal();
+        autoSaveHistory(subject);
+    }
+
     function openModal() {
         document.getElementById('outputModal').style.display = 'flex';
     }
@@ -821,10 +762,9 @@
     }
     function copyToClipboard() {
         const txt = document.getElementById('outputText').value;
-        
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(txt)
-                .then(() => alert("指示書をクリップボードにコピーしました。AIのチャット欄に貼り付けて送信してください。"))
+                .then(() => alert("指示書をクリップボードにコピーしました。 AIのチャット欄に貼り付けて送信してください。"))
                 .catch(err => alert("コピーに失敗しました: " + err));
         } else {
             const textArea = document.getElementById('outputText');
