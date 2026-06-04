@@ -1,1204 +1,1816 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=no">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=no">
+    <title>漫画プロンプトビルダー for Gemini</title>
 
-<title>漫画プロンプトビルダー for Gemini v2.1 Stable</title>
+    <link rel="manifest" href="manifest.json">
 
-<link rel="manifest" href="manifest.json?v=2.1">
+    <meta name="theme-color" content="#4a90e2">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-<meta name="theme-color" content="#4a90e2">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
 
-<style>
+        :root {
+            --bg-color: #1e1e1e;
+            --container-bg: #2d2d2d;
+            --accent-color: #4a90e2;
+            --accent-active: #00ff66;
+            --text-color: #f0f0f0;
+            --border-color: #444444;
+            --font-family:
+                "HG丸ゴシックM-PRO",
+                "HG Maru Gothic M-PRO",
+                "Hiragino Maru Gothic ProN",
+                "Yu Gothic",
+                sans-serif;
 
-*, *::before, *::after {
-    box-sizing: border-box;
-}
+            --font-size: 13pt;
+        }
 
-:root {
-    --bg-color: #1e1e1e;
-    --container-bg: #2d2d2d;
-    --accent-color: #4a90e2;
-    --accent-active: #00ff66;
-    --text-color: #f0f0f0;
-    --border-color: #444444;
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-family);
+            font-size: var(--font-size);
+            line-height: 1.5;
 
-    --font-family:
-        "HG丸ゴシックM-PRO",
-        "HG Maru Gothic M-PRO",
-        "Hiragino Maru Gothic ProN",
-        "Yu Gothic",
-        sans-serif;
+            margin: 0;
+            padding: 12px;
 
-    --font-size: 13pt;
-}
+            overflow-x: hidden;
 
-body {
-    background-color: var(--bg-color);
-    color: var(--text-color);
-    font-family: var(--font-family);
-    font-size: var(--font-size);
+            -webkit-tap-highlight-color: transparent;
+        }
 
-    margin: 0;
-    padding: 12px;
+        .container {
+            width: 100%;
+            max-width: 900px;
 
-    overflow-x: hidden;
+            margin: 0 auto;
 
-    -webkit-tap-highlight-color: transparent;
-}
+            background-color: var(--container-bg);
 
-.container {
-    width: 100%;
-    max-width: 900px;
-    margin: 0 auto;
+            padding: 16px;
 
-    background-color: var(--container-bg);
+            border-radius: 12px;
 
-    padding: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
 
-    border-radius: 12px;
+        h1 {
+            text-align: center;
 
-    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-}
+            font-size: 1.35rem;
 
-h1 {
-    text-align: center;
-    color: var(--accent-color);
-    border-bottom: 2px solid var(--border-color);
-    padding-bottom: 8px;
-}
+            margin-top: 5px;
+            margin-bottom: 20px;
 
-fieldset {
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 12px 15px;
-    margin-bottom: 16px;
-}
+            color: var(--accent-color);
 
-legend {
-    color: var(--accent-color);
-    font-weight: bold;
-}
+            border-bottom: 2px solid var(--border-color);
 
-.form-group {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 14px;
-}
+            padding-bottom: 8px;
+        }
 
-label {
-    margin-bottom: 6px;
-    font-weight: bold;
-}
+        fieldset {
+            border: 1px solid var(--border-color);
 
-textarea,
-select,
-input[type="text"] {
+            border-radius: 8px;
 
-    width: 100%;
-    background-color: #383838;
-    color: var(--text-color);
+            padding: 12px 15px;
 
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
+            margin-bottom: 16px;
 
-    padding: 12px;
+            background-color: rgba(255,255,255,0.02);
 
-    font-size: 1rem;
+            min-width: 0;
+            width: 100%;
+        }
 
-    font-family: var(--font-family);
+        legend {
+            font-weight: bold;
+            color: var(--accent-color);
 
-    outline: none;
-}
+            padding: 0 8px;
 
-textarea {
-    resize: vertical;
-}
+            font-size: 0.95rem;
+        }
 
-button {
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-family: var(--font-family);
-    transition: all 0.15s ease;
-}
+        .form-group {
+            margin-bottom: 14px;
 
-button:active {
-    transform: scale(0.98);
-}
+            display: flex;
+            flex-direction: column;
 
-.main-btn {
-    width: 100%;
-    background-color: var(--accent-color);
-    color: white;
-    padding: 15px;
-    font-size: 1.1rem;
-    font-weight: bold;
-}
+            width: 100%;
+        }
 
-.sub-btn {
-    background-color: #555;
-    color: white;
-    padding: 10px;
-}
+        label {
+            margin-bottom: 6px;
 
-.danger-btn {
-    background-color: #962d2d;
-}
+            font-weight: bold;
 
-.management-area {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin-bottom: 16px;
-    background-color: #222;
-    border-radius: 8px;
-    padding: 12px;
-}
+            font-size: 0.9rem;
+        }
 
-.management-controls {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-}
+        .label-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
 
-.tag-buttons {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
+            width: 100%;
 
-.tag-btn {
-    background-color: #444;
-    color: white;
-    border: 1px solid var(--border-color);
-    text-align: left;
-    padding: 10px 12px;
-}
+            margin-bottom: 6px;
+        }
 
-.tag-btn.active {
-    background-color: var(--accent-active);
-    color: #000;
-    border-color: var(--accent-active);
-    font-weight: bold;
-}
+        .label-row label {
+            margin-bottom: 0;
+        }
 
-.color-mode-controls {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-}
+        select,
+        textarea {
+            background-color: #383838;
 
-.color-btn {
-    height: 44px;
-    background-color: #444;
-    color: white;
-    border: 1px solid var(--border-color);
-}
+            border: 1px solid var(--border-color);
 
-.color-btn.active {
-    background-color: var(--accent-active);
-    color: #000;
-    border-color: var(--accent-active);
-    font-weight: bold;
-}
+            color: var(--text-color);
 
-details {
-    margin-top: 12px;
-    border: 1px solid #333;
-    border-radius: 8px;
-    padding: 10px;
-}
+            padding: 12px;
 
-summary {
-    cursor: pointer;
-    color: #9fd0ff;
-    font-weight: bold;
-}
+            border-radius: 6px;
 
-.modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.8);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    padding: 10px;
-}
+            font-family: var(--font-family);
+            font-size: 1rem;
 
-.modal-box {
-    width: 100%;
-    max-height: 95vh;
-    background-color: var(--container-bg);
-    border-radius: 10px;
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-}
+            outline: none;
 
-.modal-body {
-    flex-grow: 1;
-    margin-bottom: 12px;
-}
+            width: 100%;
 
-.modal-body textarea {
-    height: 60vh;
-    background-color: #1e1e1e;
-    color: #00ff66;
-    font-family: Consolas, Monaco, monospace;
-}
+            appearance: none;
+            -webkit-appearance: none;
+        }
 
-.modal-footer {
-    display: flex;
-    gap: 10px;
-}
+        select:focus,
+        textarea:focus {
+            border-color: var(--accent-color);
 
-.modal-footer button {
-    flex: 1;
-}
+            background-color: #404040;
+        }
 
-</style>
+        textarea {
+            resize: vertical;
+        }
+
+        .tag-buttons {
+            margin-bottom: 8px;
+
+            display: flex;
+            flex-direction: column;
+
+            gap: 8px;
+
+            width: 100%;
+        }
+
+        .tag-btn {
+            background-color: #444;
+            color: #fff;
+
+            border: 1px solid var(--border-color);
+
+            padding: 10px 12px;
+
+            border-radius: 6px;
+
+            cursor: pointer;
+
+            font-family: var(--font-family);
+            font-size: 0.88rem;
+
+            text-align: left;
+
+            width: 100%;
+
+            transition: all 0.2s ease;
+
+            white-space: nowrap;
+
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .tag-btn.active {
+            background-color: #1b4d3e;
+
+            color: var(--accent-active);
+
+            border-color: var(--accent-active);
+
+            font-weight: bold;
+        }
+
+        .color-mode-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+
+            gap: 8px;
+
+            width: 100%;
+
+            margin-top: 4px;
+        }
+
+        .color-btn {
+            background-color: #444;
+            color: #fff;
+
+            border: 1px solid var(--border-color);
+
+            height: 44px;
+
+            border-radius: 6px;
+
+            cursor: pointer;
+
+            font-family: var(--font-family);
+            font-size: 0.9rem;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            text-align: center;
+
+            transition: all 0.2s ease;
+
+            white-space: nowrap;
+        }
+
+        .color-btn.active {
+            background-color: #1b4d3e;
+
+            color: var(--accent-active);
+
+            border-color: var(--accent-active);
+
+            font-weight: bold;
+        }
+
+        .management-area {
+            display: flex;
+            flex-direction: column;
+
+            gap: 12px;
+
+            margin-bottom: 16px;
+
+            background-color: #222;
+
+            padding: 12px;
+
+            border-radius: 8px;
+
+            width: 100%;
+        }
+
+        .management-block {
+            border-bottom: 1px solid #333;
+
+            padding-bottom: 10px;
+        }
+
+        .management-block:last-child {
+            border-bottom: none;
+
+            padding-bottom: 0;
+        }
+
+        .management-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+
+            gap: 8px;
+
+            width: 100%;
+
+            margin-top: 6px;
+        }
+
+        .management-controls button {
+            width: 100%;
+
+            height: 44px;
+
+            padding: 4px 8px;
+
+            font-size: 0.85rem;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            text-align: center;
+
+            font-family: var(--font-family);
+
+            white-space: nowrap;
+        }
+
+        .actions {
+            margin-top: 20px;
+
+            width: 100%;
+        }
+
+        button.main-btn {
+            width: 100%;
+
+            background-color: var(--accent-color);
+
+            color: white;
+
+            border: none;
+
+            padding: 15px;
+
+            font-size: 1.1rem;
+            font-weight: bold;
+
+            border-radius: 8px;
+
+            cursor: pointer;
+
+            font-family: var(--font-family);
+
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        button.main-btn:active {
+            filter: brightness(0.8);
+        }
+
+        button.sub-btn {
+            background-color: #555;
+            color: white;
+
+            border: none;
+
+            border-radius: 6px;
+
+            cursor: pointer;
+        }
+
+        button.sub-btn:active {
+            background-color: #666;
+        }
+
+        button.danger-btn {
+            background-color: #962d2d;
+        }
+
+        button.danger-btn:active {
+            background-color: #b33636;
+        }
+
+        .inline-insert-btn {
+            background-color: #444;
+
+            color: var(--accent-active);
+
+            border: 1px solid var(--border-color);
+
+            padding: 4px 10px;
+
+            border-radius: 4px;
+
+            font-size: 0.85rem;
+            font-family: var(--font-family);
+            font-weight: bold;
+
+            cursor: pointer;
+
+            transition: background-color 0.2s;
+        }
+
+        .inline-insert-btn:active {
+            background-color: #555;
+        }
+
+        .modal-overlay {
+            position: fixed;
+
+            top: 0;
+            left: 0;
+
+            width: 100%;
+            height: 100%;
+
+            background: rgba(0,0,0,0.8);
+
+            display: none;
+
+            align-items: center;
+            justify-content: center;
+
+            z-index: 1000;
+
+            padding: 10px;
+        }
+
+        .modal-box {
+            background-color: var(--container-bg);
+
+            width: 100%;
+            max-height: 95vh;
+
+            padding: 16px;
+
+            border-radius: 10px;
+
+            box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            margin-bottom: 12px;
+
+            flex-shrink: 0;
+        }
+
+        .modal-title {
+            font-weight: bold;
+
+            font-size: 1.1rem;
+
+            color: var(--accent-color);
+        }
+
+        .modal-body {
+            flex-grow: 1;
+
+            overflow-y: auto;
+
+            margin-bottom: 12px;
+
+            width: 100%;
+        }
+
+        .modal-body textarea {
+            width: 100%;
+
+            height: 60vh;
+
+            background-color: #1e1e1e;
+
+            color: #00ff66;
+
+            font-family: Consolas, Monaco, var(--font-family);
+
+            font-size: 0.9rem;
+
+            padding: 10px;
+        }
+
+        .modal-footer {
+            display: flex;
+
+            gap: 10px;
+
+            flex-shrink: 0;
+        }
+
+        .modal-footer button {
+            flex: 1;
+
+            padding: 12px;
+
+            font-size: 1rem;
+        }
+    </style>
 </head>
 
 <body>
 
 <div class="container">
 
-<h1>漫画プロンプトビルダー for Gemini</h1>
+    <h1>漫画プロンプトビルダー for Gemini</h1>
 
-<div class="management-area">
+    <div class="management-area">
 
-<div class="form-group">
-<label for="historySelect">自動保存データの再利用：</label>
-<select id="historySelect">
-<option value="">-- 履歴表示 --</option>
-</select>
-</div>
+        <div class="management-block">
 
-<div class="management-controls">
+            <div class="form-group" style="margin-bottom: 4px;">
+                <label for="historySelect">自動保存データの再利用:</label>
 
-<button type="button" class="sub-btn" onclick="loadHistory()">
-適用・復元
-</button>
+                <select id="historySelect">
+                    <option value="">-- 履歴表示 --</option>
+                </select>
+            </div>
 
-<button type="button" class="sub-btn danger-btn" onclick="deleteHistory()">
-履歴から消す
-</button>
+            <div class="management-controls">
 
-</div>
+                <button
+                    type="button"
+                    class="sub-btn"
+                    onclick="loadHistory()"
+                >
+                    適用・復元
+                </button>
 
-<div class="form-group">
-<label for="characterSelect">👥 キャラクター選択：</label>
+                <button
+                    type="button"
+                    class="sub-btn danger-btn"
+                    onclick="deleteHistory()"
+                >
+                    履歴から消す
+                </button>
 
-<select id="characterSelect">
-<option value="">-- キャラクターを選択 --</option>
-</select>
-</div>
+            </div>
 
-<div class="management-controls">
+        </div>
 
-<button type="button" class="sub-btn" onclick="addSelectedCharacterToTextarea()">
-設定欄へ合流
-</button>
+        <div class="management-block" style="padding-top: 6px;">
 
-<button type="button" class="sub-btn danger-btn" onclick="deleteCharacterFromList()">
-選択キャラ削除
-</button>
+            <div class="form-group" style="margin-bottom: 4px;">
 
-</div>
+                <label for="character名鑑Select">
+                    👥 キャラクター選択（ボタンで決定）：
+                </label>
 
-<div class="form-group">
-<label for="newCharacterName">新しいキャラクター名：</label>
+                <select id="character名鑑Select">
+                    <option value="">-- キャラクターを選択 --</option>
+                </select>
 
-<input type="text" id="newCharacterName">
-</div>
+            </div>
 
-<div class="form-group">
-<label for="newCharacterDetails">キャラクター設定：</label>
+            <div class="management-controls">
 
-<textarea id="newCharacterDetails" rows="2"></textarea>
-</div>
+                <button
+                    type="button"
+                    class="sub-btn"
+                    style="background-color:#4a90e2;color:#fff;font-weight:bold;"
+                    onclick="addSelectedCharacterToTextarea()"
+                >
+                    設定欄へ合流
+                </button>
 
-<button
-type="button"
-class="sub-btn"
-style="background-color:#2b753a;width:100%;"
-onclick="addNewCharacter()"
->
-✨ キャラを登録
-</button>
+                <button
+                    type="button"
+                    class="sub-btn danger-btn"
+                    onclick="deleteCharacterFromList()"
+                >
+                    選択キャラ削除
+                </button>
 
-</div>
+            </div>
 
-<form onsubmit="return false;">
+            <div
+                class="management-controls"
+                style="grid-template-columns:1fr;margin-top:6px;"
+            >
 
-<fieldset>
+                <button
+                    type="button"
+                    class="sub-btn"
+                    style="background-color:#2b753a;color:#fff;font-weight:bold;"
+                    onclick="addNewCharacter()"
+                >
+                    ✨ キャラ新規登録
+                </button>
 
-<legend>★ 世界観・スタイルの設定</legend>
+            </div>
 
-<div class="form-group">
+        </div>
 
-<label for="subject_custom">
-キャラクター設定：
-</label>
+    </div>
 
-<textarea id="subject_custom" rows="3"></textarea>
+    <form id="promptForm" onsubmit="return false;">
 
-</div>
+        <fieldset>
 
-<div class="form-group">
+            <legend>★ 世界観・スタイルの設定</legend>
 
-<label for="manga_style">
-作画スタイル：
-</label>
+            <div class="form-group">
 
-<select id="manga_style"></select>
+                <label for="subject_custom">
+                    キャラクター設定（複数合流可能）：
+                </label>
 
-</div>
+                <textarea
+                    id="subject_custom"
+                    rows="3"
+                    required
+                    placeholder="例：&#10;シズク（ジト目で大人しいダウナー系の少女）&#10;ビルダーくん（アプリの妖精。優しく教えてくれるマスコット）"
+                ></textarea>
+
+            </div>
 
-</fieldset>
-
-<fieldset>
-
-<legend>📖 構成・ページの組み立て</legend>
-
-<div class="form-group">
-
-<label for="panel_layout">
-コマ数・コマ割り構成：
-</label>
-
-<select id="panel_layout"></select>
-
-</div>
-
-<div class="form-group">
-
-<label>出力カラー：</label>
-
-<div class="color-mode-controls">
-
-<button
-type="button"
-class="color-btn"
-id="mode_color"
-onclick="selectColorMode('color')"
->
-🎨 フルカラー
-</button>
-
-<button
-type="button"
-class="color-btn"
-id="mode_mono"
-onclick="selectColorMode('mono')"
->
-⬛ モノクロ
-</button>
-
-</div>
-
-</div>
-
-<details>
-
-<summary>
-▼ くわしい設定
-</summary>
-
-<div class="form-group">
-
-<label for="additional_notes">
-追加オプション：
-</label>
-
-<div class="tag-buttons">
-
-<button type="button" class="tag-btn" data-tag=" --ar 2:4" onclick="toggleTagButton(this)">
-📱 スマホ画面サイズ指定
-</button>
-
-<button type="button" class="tag-btn" data-tag=" --ar 2:3" onclick="toggleTagButton(this)">
-📖 週刊誌サイズ指定
-</button>
-
-<button type="button" class="tag-btn" data-tag=" --ar 3:2" onclick="toggleTagButton(this)">
-💻 よこ長サイズ指定
-</button>
-
-<button type="button" class="tag-btn" data-tag=" --niji 6" onclick="toggleTagButton(this)">
-✨ アニメ風表現
-</button>
-
-<button type="button" class="tag-btn" data-tag=", slanted panel borders, dynamic diagonal layout, dramatic panel compositions" onclick="toggleTagButton(this)">
-📐 大迫力のななめコマ
-</button>
-
-<button type="button" class="tag-btn" data-tag=", stylized comic book pop-art onomatopoeia, bold English action text SFX" onclick="toggleTagButton(this)">
-💥 英語の描き文字
-</button>
-
-<button type="button" class="tag-btn" data-tag=", charming child hand-drawn speech bubbles, soft whimsical round dialogue frames" onclick="toggleTagButton(this)">
-💬 手書き風フキダシ
-</button>
-
-</div>
-
-<textarea id="additional_notes" rows="2"></textarea>
-
-</div>
-
-</details>
-
-<div class="form-group">
-
-<label for="dialogues_text">
-セリフや設定：
-</label>
-
-<textarea id="dialogues_text" rows="6"></textarea>
-
-</div>
-
-</fieldset>
-
-<button
-type="button"
-class="main-btn"
-onclick="generateGeminiPrompt()"
->
-AI専用の指示書を生成する！
-</button>
-
-</form>
+            <div class="form-group">
+
+                <label for="manga_style">
+                    作画スタイル（タッチ）：
+                </label>
+
+                <select id="manga_style"></select>
+
+            </div>
+
+        </fieldset>
+
+        <fieldset>
+
+            <legend>📖 構成・ページの組み立て</legend>
+
+            <div class="form-group">
+
+                <label for="panel_layout">
+                    コマ数・コマ割り構成：
+                </label>
+
+                <select id="panel_layout"></select>
+
+            </div>
+
+            <div class="form-group">
+
+                <label>出力カラーの選択：</label>
+
+                <div class="color-mode-controls">
+
+                    <button
+                        type="button"
+                        class="color-btn"
+                        id="mode_color"
+                        onclick="selectColorMode('color')"
+                    >
+                        🎨 フルカラー表示
+                    </button>
+
+                    <button
+                        type="button"
+                        class="color-btn"
+                        id="mode_mono"
+                        onclick="selectColorMode('mono')"
+                    >
+                        ⿊白（モノクロ原稿）
+                    </button>
+
+                </div>
+
+            </div>
+
+            <div class="form-group">
+
+                <label for="additional_notes">
+                    追加オプション（特殊効果・アスペクト比指定）：
+                </label>
+
+                <div class="tag-buttons">
+
+                    <button
+                        type="button"
+                        class="tag-btn"
+                        data-tag=" --ar 2:4"
+                        onclick="toggleTagButton(this)"
+                    >
+                        📱 スマホ画面サイズ指定 [--ar 2:4]
+                    </button>
+
+                    <button
+                        type="button"
+                        class="tag-btn"
+                        data-tag=" --ar 2:3"
+                        onclick="toggleTagButton(this)"
+                    >
+                        📖 週刊誌サイズ指定 [--ar 2:3]
+                    </button>
+
+                    <button
+                        type="button"
+                        class="tag-btn"
+                        data-tag=" --ar 3:2"
+                        onclick="toggleTagButton(this)"
+                    >
+                        💻 よこ長画面サイズ指定 [--ar 3:2]
+                    </button>
+
+                    <button
+                        type="button"
+                        class="tag-btn"
+                        data-tag=" --niji 6"
+                        onclick="toggleTagButton(this)"
+                    >
+                        ✨ アニメーション風表現 [--niji 6]
+                    </button>
+
+                    <button
+                        type="button"
+                        class="tag-btn"
+                        data-tag=", slanted panel borders, dynamic diagonal layout, dramatic panel compositions"
+                        onclick="toggleTagButton(this)"
+                    >
+                        📐 大迫力のななめコマ
+                    </button>
+
+                    <button
+                        type="button"
+                        class="tag-btn"
+                        data-tag=", stylized comic book pop-art onomatopoeia, bold English action text SFX"
+                        onclick="toggleTagButton(this)"
+                    >
+                        💥 英語の描き文字・効果音
+                    </button>
+
+                    <button
+                        type="button"
+                        class="tag-btn"
+                        data-tag=", charming child hand-drawn speech bubbles, soft whimsical round dialogue frames"
+                        onclick="toggleTagButton(this)"
+                    >
+                        💬 手書き風の丸型フキダシ
+                    </button>
+
+                </div>
+
+                <textarea
+                    id="additional_notes"
+                    rows="2"
+                    placeholder="特別なアングル指定など、こだわりたい命令があれば自由入力してください。"
+                ></textarea>
+
+            </div>
+
+            <div class="form-group">
+
+                <div class="label-row">
+
+                    <label for="dialogues_text">
+                        セリフや設定（改行入力）：
+                    </label>
+
+                    <button
+                        type="button"
+                        class="inline-insert-btn"
+                        onclick="insertBrackets()"
+                    >
+                        ＋「」を入れる
+                    </button>
+
+                </div>
+
+                <textarea
+                    id="dialogues_text"
+                    rows="6"
+                    placeholder="「よしっ、いくぞ！」&#10;「うわっ！前がみえないぞ！？」&#10;「なんとかなるさ！」&#10;「大せいこう！」"
+                ></textarea>
+
+            </div>
+
+        </fieldset>
+
+        <div class="actions">
+
+            <button
+                type="button"
+                class="main-btn"
+                onclick="generateGeminiPrompt()"
+            >
+                AI専用の指示書（プロンプト）を生成する！
+            </button>
+
+        </div>
+
+    </form>
 
 </div>
 
 <div class="modal-overlay" id="outputModal">
 
-<div class="modal-box">
+    <div class="modal-box">
 
-<div class="modal-body">
+        <div class="modal-header">
 
-<textarea id="outputText" readonly></textarea>
+            <div class="modal-title">
+                生成完了：AI用指示書
+            </div>
+
+            <button
+                type="button"
+                class="sub-btn"
+                style="padding:6px 12px;"
+                onclick="closeModal()"
+            >
+                ✕
+            </button>
+
+        </div>
+
+        <div class="modal-body">
+
+            <textarea id="outputText" readonly></textarea>
+
+        </div>
+
+        <div class="modal-footer">
+
+            <button
+                type="button"
+                class="sub-btn"
+                style="background-color:var(--accent-color);"
+                onclick="copyToClipboard()"
+            >
+                プロンプトをコピー
+            </button>
+
+            <button
+                type="button"
+                class="sub-btn"
+                onclick="closeModal()"
+            >
+                閉じる
+            </button>
+
+        </div>
+
+    </div>
 
 </div>
 
-<div class="modal-footer">
+<script>
 
-<button
-type="button"
-class="sub-btn"
-style="background-color:#4a90e2;"
-onclick="copyToClipboard()"
->
-コピー
-</button>
+    // =========================================================
+    // 安定性最優先ユーティリティ
+    // =========================================================
 
-<button
-type="button"
-class="sub-btn"
-onclick="closeModal()"
->
-閉じる
-</button>
-
-</div>
-
-</div>
-
-</div>
-
-<script defer>
-
-function safeParseJSON(raw, fallback = []) {
-
-    try {
-        return raw ? JSON.parse(raw) : fallback;
-    } catch (e) {
-        console.error(e);
-        return fallback;
+    function safeParseJSON(raw, fallback = []) {
+        try {
+            return raw ? JSON.parse(raw) : fallback;
+        } catch (e) {
+            console.error('JSON解析失敗', e);
+            return fallback;
+        }
     }
-}
 
-function safeLocalStorageGet(key, fallback = []) {
+    function safeLocalStorageSet(key, value) {
+        try {
+            localStorage.setItem(key, value);
+            return true;
+        } catch (e) {
+            console.error('localStorage保存失敗', e);
 
-    try {
+            alert(
+                '保存領域のエラーが発生しました。\n' +
+                '不要な履歴を削除してください。'
+            );
 
-        return safeParseJSON(
-            localStorage.getItem(key),
-            fallback
+            return false;
+        }
+    }
+
+    function safeLocalStorageGet(key, fallback = []) {
+        try {
+            const raw = localStorage.getItem(key);
+            return safeParseJSON(raw, fallback);
+        } catch (e) {
+            console.error('localStorage取得失敗', e);
+            return fallback;
+        }
+    }
+
+    // =========================================================
+    // データ定義
+    // =========================================================
+
+    const DATA_STYLE = {
+
+        "ゆるキャラ風":
+            "yuru-chara style, cute mascot, simplified vector",
+
+        "線が少ないミニマルイラスト":
+            "minimalist illustration, simple clean lines, flat design",
+
+        "手描き風スケッチ":
+            "hand-drawn sketch, pencil line art, casual scribbles, heartwarming",
+
+        "ふわふわ系マスコット":
+            "fluffy mascot character, soft shading, adorable, friendly look",
+
+        "絵本風（2Dフラット）":
+            "storybook illustration, 2D flat art, whimsical design",
+
+        "デフォルメマスコット風":
+            "chibi mascot style, super deformed character art",
+
+        "現代アニメ風":
+            "modern anime style, vibrant coloring, clean shading, beautiful details",
+
+        "少年漫画風":
+            "shonen manga style, dynamic composition, energetic and sharp lines",
+
+        "北斗の拳風":
+            "80s masculine retro manga style, muscular anatomy, thick ink lines, Hokuto no Ken aesthetic",
+
+        "JOJO風":
+            "highly stylized manga art, dramatic shading, bold heavy lines, JoJo aesthetic",
+
+        "少女漫画風":
+            "shoujo manga style, delicate lines, expressive emotional eyes",
+
+        "ベルバラ風":
+            "classic 70s shoujo manga style, retro anime vintage, dramatic eyes, roses aesthetic",
+
+        "ディズニー風":
+            "classic western 3D animation style, Disney character aesthetic",
+
+        "サウスパーク風":
+            "2D cutout animation style, South Park aesthetic, minimalist geometric papercraft",
+
+        "水彩画風":
+            "watercolor painting style, soft bleeding ink, pastel translucent tones",
+
+        "ピクセルアート風":
+            "8bit pixel art style, retro video game aesthetic"
+    };
+
+    const DATA_LAYOUT = {
+
+        "4コマ構成（日本の縦並び・おすすめ！）":
+            "vertical 4-panel comic strip, arranged sequentially from top to bottom in a single column",
+
+        "3コマ（ちょっと短め）":
+            "3-panel comic layout, clean frames",
+
+        "5〜7コマ（しっかりストーリー）":
+            "5 to 7 panels comic page layout",
+
+        "大ゴマ ＋ 小コマ（メリハリのある大迫力）":
+            "dynamic panel layout with one large splash panel and smaller secondary panels"
+    };
+
+    let currentColorMode = "";
+
+    // =========================================================
+    // 初期化
+    // =========================================================
+
+    window.addEventListener('DOMContentLoaded', () => {
+
+        initSelectOptions(
+            'manga_style',
+            Object.keys(DATA_STYLE)
         );
 
-    } catch (e) {
+        initSelectOptions(
+            'panel_layout',
+            Object.keys(DATA_LAYOUT)
+        );
 
-        console.error(e);
+        document.getElementById('panel_layout').value =
+            "4コマ構成（日本の縦並び・おすすめ！）";
 
-        return fallback;
+        updateHistoryCombo();
+        updateCharacterCombo();
+
+        syncTagButtonsWithTextarea();
+    });
+
+    function initSelectOptions(elementId, keys) {
+
+        const select = document.getElementById(elementId);
+
+        keys.forEach(key => {
+
+            const opt = document.createElement('option');
+
+            opt.value = key;
+            opt.textContent = key;
+
+            select.appendChild(opt);
+        });
     }
-}
 
-function safeLocalStorageSet(key, value) {
+    // =========================================================
+    // カラーモード
+    // =========================================================
 
-    try {
+    function setColorMode(mode) {
 
-        localStorage.setItem(key, value);
+        currentColorMode = mode;
 
-        return true;
+        document
+            .getElementById('mode_color')
+            .classList
+            .toggle('active', mode === 'color');
 
-    } catch (e) {
-
-        console.error(e);
-
-        alert("保存領域エラー");
-
-        return false;
+        document
+            .getElementById('mode_mono')
+            .classList
+            .toggle('active', mode === 'mono');
     }
-}
-
-const DATA_STYLE = {
-
-"ゆるキャラ風": {
-color:"yuru-chara style, cute mascot, simplified vector",
-mono:"yuru-chara monochrome manga style, soft screentones"
-},
 
-"線が少ないミニマルイラスト": {
-color:"minimalist illustration, simple clean lines, flat design",
-mono:"minimal monochrome illustration, clean manga lines"
-},
-
-"手描き風スケッチ": {
-color:"hand-drawn sketch, pencil line art, casual scribbles, heartwarming",
-mono:"hand-drawn monochrome sketch, pencil manga lines"
-},
-
-"ふわふわ系マスコット": {
-color:"fluffy mascot character, soft shading, adorable, friendly look",
-mono:"fluffy mascot monochrome manga style, soft screentones"
-},
+    function selectColorMode(mode) {
 
-"絵本風（2Dフラット）": {
-color:"storybook illustration, 2D flat art, whimsical design",
-mono:"storybook monochrome illustration, soft black ink storybook style"
-},
+        if (currentColorMode === mode) {
+            setColorMode("");
+        } else {
+            setColorMode(mode);
+        }
+    }
 
-"デフォルメマスコット風": {
-color:"chibi mascot style, super deformed character art",
-mono:"super deformed monochrome mascot manga style"
-},
+    // =========================================================
+    // キャラクター管理
+    // =========================================================
 
-"現代アニメ風": {
-color:"modern anime style, vibrant coloring, clean shading, beautiful details",
-mono:"modern anime monochrome manga style, clean ink lines, screentones"
-},
+    function getCharacters() {
 
-"少年漫画風": {
-color:"shonen manga style, dynamic composition, energetic and sharp lines",
-mono:"shonen manga monochrome style, sharp ink lines, professional screentones"
-},
+        try {
 
-"北斗の拳風": {
-color:"80s masculine retro manga style, muscular anatomy, thick ink lines",
-mono:"80s monochrome retro manga style, thick ink lines, dramatic screentones"
-},
+            return safeLocalStorageGet(
+                'manga_prompt_characters',
+                []
+            );
 
-"JOJO風": {
-color:"highly stylized manga art, dramatic shading, bold heavy lines",
-mono:"JoJo monochrome manga aesthetic, dramatic black ink shadows"
-},
+        } catch (e) {
 
-"少女漫画風": {
-color:"shoujo manga style, delicate lines, expressive emotional eyes",
-mono:"shoujo monochrome manga style, delicate black lines"
-},
+            console.error('キャラクターデータ破損', e);
 
-"ベルバラ風": {
-color:"classic 70s shoujo manga style, retro anime vintage",
-mono:"70s shoujo monochrome manga style, elegant screentones"
-},
+            localStorage.removeItem('manga_prompt_characters');
 
-"ディズニー風": {
-color:"classic western 3D animation style, Disney character aesthetic",
-mono:"classic western monochrome cartoon style"
-},
+            return [];
+        }
+    }
 
-"サウスパーク風": {
-color:"2D cutout animation style, South Park aesthetic",
-mono:"minimal monochrome cutout cartoon style"
-},
+    function saveCharactersList(list) {
 
-"水彩画風": {
-color:"watercolor painting style, soft bleeding ink, pastel translucent tones",
-mono:"ink wash painting style, monochrome watercolor texture"
-},
+        safeLocalStorageSet(
+            'manga_prompt_characters',
+            JSON.stringify(list)
+        );
 
-"ピクセルアート風": {
-color:"8bit pixel art style, retro video game aesthetic",
-mono:"8bit monochrome pixel art style"
-}
+        updateCharacterCombo();
+    }
 
-};
+    function updateCharacterCombo() {
 
-const DATA_LAYOUT = {
+        const select =
+            document.getElementById('character名鑑Select');
 
-"4コマ構成（日本の縦並び・おすすめ！）":
-"vertical 4-panel comic strip, arranged sequentially from top to bottom in a single column",
+        select.innerHTML =
+            '<option value="">-- キャラクターを選択 --</option>';
 
-"3コマ（ちょっと短め）":
-"3-panel comic layout, clean frames",
+        const chars = getCharacters();
 
-"5〜7コマ（しっかりストーリー）":
-"5 to 7 panels comic page layout",
+        chars.forEach(c => {
 
-"大ゴマ ＋ 小コマ（メリハリのある大迫力）":
-"dynamic panel layout with one large splash panel and smaller secondary panels"
+            const opt = document.createElement('option');
 
-};
+            opt.value = c.id;
+            opt.textContent = c.name;
 
-let currentColorMode = "";
+            select.appendChild(opt);
+        });
+    }
 
-window.addEventListener('DOMContentLoaded', () => {
+    function addNewCharacter() {
 
-initSelectOptions(
-'manga_style',
-Object.keys(DATA_STYLE)
-);
+        const charName =
+            prompt(
+                "キャラクターの名前を入力してください（例：シズク）："
+            );
 
-initSelectOptions(
-'panel_layout',
-Object.keys(DATA_LAYOUT)
-);
+        if (!charName || !charName.trim()) return;
 
-document.getElementById('panel_layout').value =
-"4コマ構成（日本の縦並び・おすすめ！）";
+        const charDetails =
+            prompt(
+                "キャラクターの特徴を入力してください（例：ジト目で大人しい少女、白髪）："
+            );
 
-updateHistoryCombo();
-updateCharacterCombo();
-syncTagButtonsWithTextarea();
+        if (!charDetails || !charDetails.trim()) return;
 
-});
+        let chars = getCharacters();
 
-function initSelectOptions(id, keys) {
+        chars.unshift({
 
-const select =
-document.getElementById(id);
+            id:
+                (
+                    crypto.randomUUID
+                        ? crypto.randomUUID()
+                        : String(Date.now()) + Math.random()
+                ),
 
-keys.forEach(key => {
+            name: charName.trim(),
 
-const opt =
-document.createElement('option');
+            details: charDetails.trim()
+        });
 
-opt.value = key;
-opt.textContent = key;
+        saveCharactersList(chars);
+    }
 
-select.appendChild(opt);
+    function addSelectedCharacterToTextarea() {
 
-});
-}
+        const select =
+            document.getElementById('character名鑑Select');
 
-function setColorMode(mode) {
+        const id = select.value;
 
-currentColorMode = mode;
+        if (!id) {
 
-document
-.getElementById('mode_color')
-.classList
-.toggle('active', mode === 'color');
+            alert(
+                "設定欄に合流させたいキャラクターをリストからえらんでください。"
+            );
 
-document
-.getElementById('mode_mono')
-.classList
-.toggle('active', mode === 'mono');
+            return;
+        }
 
-}
+        const chars = getCharacters();
 
-function selectColorMode(mode) {
+        const target = chars.find(c => c.id == id);
 
-if (currentColorMode === mode) {
-setColorMode("");
-} else {
-setColorMode(mode);
-}
-}
+        if (!target) return;
 
-function getCharacters() {
+        const textarea =
+            document.getElementById('subject_custom');
 
-return safeLocalStorageGet(
-'manga_prompt_characters',
-[]
-);
-}
+        if (textarea.value.trim() !== "") {
 
-function saveCharactersList(list) {
+            textarea.value +=
+                `\n${target.name}（${target.details}）`;
 
-safeLocalStorageSet(
-'manga_prompt_characters',
-JSON.stringify(list)
-);
+        } else {
 
-updateCharacterCombo();
-}
+            textarea.value =
+                `${target.name}（${target.details}）`;
+        }
 
-function updateCharacterCombo() {
+        select.value = "";
+    }
 
-const select =
-document.getElementById('characterSelect');
+    function deleteCharacterFromList() {
 
-select.innerHTML =
-'<option value="">-- キャラクターを選択 --</option>';
+        const select =
+            document.getElementById('character名鑑Select');
 
-getCharacters().forEach(c => {
+        const id = select.value;
 
-const opt =
-document.createElement('option');
+        if (!id) {
 
-opt.value = c.id;
-opt.textContent = c.name;
+            alert(
+                "消したいキャラクターを、上のリストからえらんでください。"
+            );
 
-select.appendChild(opt);
+            return;
+        }
 
-});
+        let chars = getCharacters();
 
-}
+        const target = chars.find(c => c.id == id);
 
-function addNewCharacter() {
+        if (!target) return;
 
-const name =
-document
-.getElementById('newCharacterName')
-.value
-.trim();
+        if (
+            confirm(
+                `キャラクター「${target.name}」を名鑑から消去しますか？`
+            )
+        ) {
 
-const details =
-document
-.getElementById('newCharacterDetails')
-.value
-.trim();
+            const updatedChars =
+                chars.filter(c => c.id != id);
 
-if (!name || !details) {
+            saveCharactersList(updatedChars);
 
-alert("キャラクター名と設定を入力してください。");
+            select.value = "";
+        }
+    }
 
-return;
-}
+    // =========================================================
+    // タグボタン
+    // =========================================================
 
-const chars = getCharacters();
+    function toggleTagButton(btn) {
 
-chars.unshift({
+        const textarea =
+            document.getElementById('additional_notes');
 
-id:
-crypto.randomUUID
-? crypto.randomUUID()
-: String(Date.now()) + Math.random(),
+        const tagText =
+            btn.getAttribute('data-tag');
 
-name,
-details
+        if (btn.classList.contains('active')) {
 
-});
+            btn.classList.remove('active');
 
-saveCharactersList(chars);
+            textarea.value =
+                textarea.value
+                    .split(tagText)
+                    .join('');
 
-document.getElementById('newCharacterName').value = "";
-document.getElementById('newCharacterDetails').value = "";
+        } else {
 
-alert(`「${name}」を登録しました。`);
+            btn.classList.add('active');
 
-}
+            if (!textarea.value.includes(tagText)) {
+                textarea.value += tagText;
+            }
+        }
+    }
 
-function addSelectedCharacterToTextarea() {
+    function syncTagButtonsWithTextarea() {
 
-const id =
-document.getElementById('characterSelect').value;
+        const textarea =
+            document.getElementById('additional_notes');
 
-if (!id) return;
+        const text = textarea.value;
 
-const chars = getCharacters();
+        document
+            .querySelectorAll('.tag-buttons .tag-btn')
+            .forEach(btn => {
 
-const target =
-chars.find(c => c.id == id);
+                const tagText =
+                    btn.getAttribute('data-tag');
 
-if (!target) return;
+                if (text.includes(tagText)) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+    }
 
-const textarea =
-document.getElementById('subject_custom');
+    document
+        .getElementById('additional_notes')
+        ?.addEventListener('input', () => {
 
-if (textarea.value.trim()) {
+            syncTagButtonsWithTextarea();
+        });
 
-textarea.value +=
-`\n${target.name}（${target.details}）`;
+    // =========================================================
+    // 履歴管理
+    // =========================================================
 
-} else {
+    function getHistory() {
 
-textarea.value =
-`${target.name}（${target.details}）`;
+        try {
 
-}
+            return safeLocalStorageGet(
+                'manga_prompt_history',
+                []
+            );
 
-}
+        } catch (e) {
 
-function deleteCharacterFromList() {
+            console.error('履歴データ破損', e);
 
-const id =
-document.getElementById('characterSelect').value;
+            localStorage.removeItem('manga_prompt_history');
 
-if (!id) return;
+            return [];
+        }
+    }
 
-let chars = getCharacters();
+    function saveHistoryList(list) {
 
-chars =
-chars.filter(c => c.id != id);
+        safeLocalStorageSet(
+            'manga_prompt_history',
+            JSON.stringify(list.slice(0, 50))
+        );
+    }
 
-saveCharactersList(chars);
+    function autoSaveHistory(subjectStr) {
 
-}
+        const currentData = getCurrentState();
 
-function getHistory() {
+        let hist = getHistory();
 
-return safeLocalStorageGet(
-'manga_prompt_history',
-[]
-);
+        if (
+            hist.length > 0 &&
+            JSON.stringify(hist[0].data)
+                === JSON.stringify(currentData)
+        ) {
+            return;
+        }
 
-}
+        const now = new Date();
 
-function saveHistoryList(list) {
+        const timestamp =
+            `${now.getFullYear()}-` +
+            `${String(now.getMonth()+1).padStart(2,'0')}-` +
+            `${String(now.getDate()).padStart(2,'0')} ` +
+            `${String(now.getHours()).padStart(2,'0')}:` +
+            `${String(now.getMinutes()).padStart(2,'0')}:` +
+            `${String(now.getSeconds()).padStart(2,'0')}`;
 
-safeLocalStorageSet(
-'manga_prompt_history',
-JSON.stringify(list.slice(0, 50))
-);
+        let displaySubject =
+            subjectStr.length > 12
+                ? subjectStr.replace(/\n/g, ' ')
+                    .substring(0, 12) + "..."
+                : subjectStr.replace(/\n/g, ' ');
 
-}
+        const title =
+            `${timestamp} - ${displaySubject}`;
 
-function updateHistoryCombo() {
+        hist.unshift({
 
-const select =
-document.getElementById('historySelect');
+            id:
+                (
+                    crypto.randomUUID
+                        ? crypto.randomUUID()
+                        : String(Date.now()) + Math.random()
+                ),
 
-select.innerHTML =
-'<option value="">-- 履歴表示 --</option>';
+            title: title,
 
-getHistory().forEach(h => {
+            data: currentData
+        });
 
-const opt =
-document.createElement('option');
+        saveHistoryList(hist);
 
-opt.value = h.id;
-opt.textContent = h.title;
+        updateHistoryCombo();
+    }
 
-select.appendChild(opt);
+    function getCurrentState() {
 
-});
+        return {
 
-}
+            subject:
+                document.getElementById('subject_custom').value,
 
-function getCurrentState() {
+            style:
+                document.getElementById('manga_style').value,
 
-return {
+            layout:
+                document.getElementById('panel_layout').value,
 
-subject:
-document.getElementById('subject_custom').value,
+            notes:
+                document.getElementById('additional_notes').value,
 
-style:
-document.getElementById('manga_style').value,
+            dialogues:
+                document.getElementById('dialogues_text').value,
 
-layout:
-document.getElementById('panel_layout').value,
+            colorMode:
+                currentColorMode
+        };
+    }
 
-notes:
-document.getElementById('additional_notes').value,
+    function updateHistoryCombo() {
 
-dialogues:
-document.getElementById('dialogues_text').value,
+        const select =
+            document.getElementById('historySelect');
 
-colorMode:
-currentColorMode
+        select.innerHTML =
+            '<option value="">-- 履歴表示 --</option>';
 
-};
+        const hist = getHistory();
 
-}
+        hist.forEach(h => {
 
-function autoSaveHistory(subject) {
+            const opt = document.createElement('option');
 
-const hist = getHistory();
+            opt.value = h.id;
+            opt.textContent = h.title;
 
-hist.unshift({
+            select.appendChild(opt);
+        });
+    }
 
-id:
-crypto.randomUUID
-? crypto.randomUUID()
-: String(Date.now()) + Math.random(),
+    function loadHistory() {
 
-title:
-new Date().toLocaleString()
-+ " - "
-+ subject.substring(0, 12),
+        const id =
+            document.getElementById('historySelect').value;
 
-data: getCurrentState()
+        if (!id) return;
 
-});
+        const hist = getHistory();
 
-saveHistoryList(hist);
+        const target =
+            hist.find(h => h.id == id);
 
-updateHistoryCombo();
+        if (!target) return;
 
-}
+        applyStateToUI(target.data);
+    }
 
-function applyStateToUI(d) {
+    function deleteHistory() {
 
-document.getElementById('subject_custom').value =
-d.subject || '';
+        const id =
+            document.getElementById('historySelect').value;
 
-document.getElementById('manga_style').value =
-d.style || '';
+        if (!id) return;
 
-document.getElementById('panel_layout').value =
-d.layout || '';
+        if (confirm("選択した履歴を消去しますか？")) {
 
-document.getElementById('additional_notes').value =
-d.notes || '';
+            let hist = getHistory();
 
-document.getElementById('dialogues_text').value =
-d.dialogues || '';
+            hist =
+                hist.filter(h => h.id != id);
 
-setColorMode(d.colorMode || "");
+            saveHistoryList(hist);
 
-}
+            updateHistoryCombo();
+        }
+    }
 
-function loadHistory() {
+    function applyStateToUI(d) {
 
-const id =
-document.getElementById('historySelect').value;
+        document.getElementById('subject_custom').value =
+            d.subject || '';
 
-if (!id) return;
+        document.getElementById('manga_style').value =
+            d.style || '';
 
-const hist = getHistory();
+        document.getElementById('panel_layout').value =
+            d.layout || '';
 
-const target =
-hist.find(h => h.id == id);
+        document.getElementById('additional_notes').value =
+            d.notes || '';
 
-if (!target) return;
+        document.getElementById('dialogues_text').value =
+            d.dialogues || '';
 
-applyStateToUI(target.data);
+        setColorMode(d.colorMode || "");
 
-}
+        syncTagButtonsWithTextarea();
+    }
 
-function deleteHistory() {
+    // =========================================================
+    // セリフ補助
+    // =========================================================
 
-const id =
-document.getElementById('historySelect').value;
+    function insertBrackets() {
 
-if (!id) return;
+        const textarea =
+            document.getElementById('dialogues_text');
 
-let hist = getHistory();
+        const currentText =
+            textarea.value;
 
-hist =
-hist.filter(h => h.id != id);
+        if (currentText === "") {
 
-saveHistoryList(hist);
+            textarea.value = "「」";
 
-updateHistoryCombo();
+        } else if (currentText.endsWith("\n")) {
 
-}
+            textarea.value =
+                currentText + "「」";
 
-function toggleTagButton(btn) {
+        } else {
 
-const textarea =
-document.getElementById('additional_notes');
+            textarea.value =
+                currentText + "\n「」";
+        }
 
-const tag =
-btn.getAttribute('data-tag');
+        textarea.focus();
 
-if (btn.classList.contains('active')) {
+        const targetPos =
+            textarea.value.length - 1;
 
-btn.classList.remove('active');
+        textarea.setSelectionRange(
+            targetPos,
+            targetPos
+        );
+    }
 
-textarea.value =
-textarea.value
-.split(tag)
-.join('');
+    // =========================================================
+    // プロンプト生成
+    // =========================================================
 
-} else {
+    function generateGeminiPrompt() {
 
-btn.classList.add('active');
+        const subject =
+            document
+                .getElementById('subject_custom')
+                .value
+                .trim();
 
-if (!textarea.value.includes(tag)) {
-textarea.value += tag;
-}
+        if (!subject) {
 
-}
+            alert(
+                "登場人物やキャラクター設定を入力してください。"
+            );
 
-}
+            return;
+        }
 
-function syncTagButtonsWithTextarea() {
+        const styleKey =
+            document.getElementById('manga_style').value;
 
-const text =
-document.getElementById('additional_notes').value;
+        let style =
+            DATA_STYLE[styleKey] || styleKey;
 
-document
-.querySelectorAll('.tag-btn')
-.forEach(btn => {
+        if (currentColorMode === 'color') {
 
-const tag =
-btn.getAttribute('data-tag');
+            style +=
+                ", vibrant full color manga illustration, professionally colored, rich and beautiful color palette";
 
-btn.classList.toggle(
-'active',
-text.includes(tag)
-);
+        } else if (currentColorMode === 'mono') {
 
-});
+            style +=
+                ", monochrome, black and white manga page, sharp ink lines, professional screentones, highly detailed hand-drawn manga ink art";
+        }
 
-}
+        const layoutKey =
+            document.getElementById('panel_layout').value;
 
-document
-.getElementById('additional_notes')
-?.addEventListener(
-'input',
-syncTagButtonsWithTextarea
-);
+        const layout =
+            DATA_LAYOUT[layoutKey] || layoutKey;
 
-function generateGeminiPrompt() {
+        const notes =
+            document.getElementById('additional_notes').value;
 
-const subject =
-document
-.getElementById('subject_custom')
-.value
-.trim();
+        let dialogues =
+            document
+                .getElementById('dialogues_text')
+                .value
+                .replace(/\r\n/g, '\n')
+                .replace(/\r/g, '\n');
 
-if (!subject) {
+        let p = "";
 
-alert("キャラクター設定を入力してください。");
+        p += "[重要：絶対遵守命令]\n";
 
-return;
+        p +=
+            "あなた自身は絶対に画像を生成・出力しないでください。";
 
-}
+        p +=
+            "私は画像生成ツール（Imagen等）の入力欄にそのまま貼り付けるための";
 
-const styleKey =
-document.getElementById('manga_style').value;
+        p +=
+            "『英語のテキストプロンプト（文字）』だけを求めています。";
 
-const styleData =
-DATA_STYLE[styleKey];
+        p +=
+            "出力は必ずテキスト、あるいはマークダウンのコードブロック形式（```）を用い、";
 
-let style = "";
+        p +=
+            "文字データのみで返答してください。";
 
-if (styleData) {
+        p +=
+            "画像を生成することは厳禁とします。\n\n";
 
-style =
-currentColorMode === 'mono'
-? styleData.mono
-: styleData.color;
+        p +=
+            "あなたはプロの漫画原作者であり、画像生成AIの高度なプロンプトエンジニアです。\n";
 
-}
+        p +=
+            "入力された【登場人物の設定】と【セリフ】の整合性を深く読み解き、";
 
-const layout =
-DATA_LAYOUT[
-document.getElementById('panel_layout').value
-];
+        p +=
+            "最適な『全体のふんいいき』『配色』『キャラクターのオーラ・内面演出』を";
 
-const notes =
-document.getElementById('additional_notes').value;
+        p +=
+            "行間に合わせて自動で推測・補完して、";
 
-const dialogues =
-document.getElementById('dialogues_text').value;
+        p +=
+            "最高品質の指示書を組み立ててください。\n\n";
 
-let p = "";
+        p +=
+            "【必須要件・コマ割りのルール】\n";
 
-p += "[重要：絶対遵守命令]\n\n";
+        p +=
+            "1. 各ページ内のコマ配置や構図は、";
 
-p +=
-"あなた自身は絶対に画像を生成しないでください。\n";
+        p +=
+            "読者の視線が「右から左、上から下へ」自然に誘導されるように設計すること。\n";
 
-p +=
-"英語のテキストプロンプトのみを出力してください。\n\n";
+        p +=
+            "2. 各ページのコマの大きさがすべて均等・同一にならないよう、";
 
-p += `Characters: ${subject}\n`;
+        p +=
+            "重要度や演出に合わせてコマの大きさにしっかりとメリハリ";
 
-p += `Style: ${style}\n`;
+        p +=
+            "（大ゴマ・小コマ等の変化）をつけること。";
 
-p += `Layout: ${layout}\n`;
+        p +=
+            "(※ただし4コマ構成が指定されているページは除く)\n\n";
 
-if (dialogues.trim()) {
-p += `Dialogues:\n${dialogues}\n`;
-}
+        p +=
+            "【出力に関する絶対制約】\n";
 
-if (notes.trim()) {
-p += `Additional Notes: ${notes}\n`;
-}
+        p +=
+            "作成した英語プロンプトは、";
 
-document.getElementById('outputText').value = p;
+        p +=
+            "各コマごとにバラバラに分離して分割出力することを厳禁とします。";
 
-openModal();
+        p +=
+            "ユーザーが1クリックで画像生成AIへそのまままとめて投入できるよう、";
 
-autoSaveHistory(subject);
+        p +=
+            "必ず「ページ全体の指示を1つに統合した、";
 
-}
+        p +=
+            "一括でコピー可能な状態の英語プロンプト」として";
 
-function openModal() {
+        p +=
+            "1つにまとめて完成させて出力してください。\n\n";
 
-document.getElementById('outputModal').style.display =
-'flex';
+        p +=
+            "【全ページ共通設定 (キャラクター・世界観の一貫性保証)】\n";
 
-}
+        p +=
+            `・登場人物・主人公設定: ${subject}\n`;
 
-function closeModal() {
+        p +=
+            `・全体画風（スタイル）: ${style}\n\n`;
 
-document.getElementById('outputModal').style.display =
-'none';
+        p +=
+            "※上記特徴（服装、髪型、色彩、顔の傾向など）は、";
 
-}
+        p +=
+            "プロンプト内でブレずに共通して";
 
-async function copyToClipboard() {
+        p +=
+            "シームレスに描写されるように";
 
-try {
+        p +=
+            "英文プロンプトを固定・調整してください。\n\n";
 
-await navigator.clipboard.writeText(
-document.getElementById('outputText').value
-);
+        p +=
+            "--------------------------------------------------------\n";
 
-alert("コピーしました。");
+        p +=
+            "【各ページの個別構成データ】\n";
 
-} catch (e) {
+        p +=
+            "--------------------------------------------------------\n";
 
-console.error(e);
+        p +=
+            "■ 第 1 ページ目\n";
 
-alert("コピー失敗");
+        p +=
+            `  ・コマ構成指定: ${layout}\n`;
 
-}
+        if (dialogues.trim()) {
 
-}
+            p +=
+                "  ・組み込んでほしいセリフ・会話（※日本語のままで処理すること）:\n";
 
-if ('serviceWorker' in navigator) {
+            p +=
+                "    [重要] 以下のセリフは";
 
-window.addEventListener('load', async () => {
+            p +=
+                "キャラクターの口調や方言、語気のニュアンスを完璧に保持するため、";
 
-try {
+            p +=
+                "絶対に英語に翻訳しないでください。";
 
-const res =
-await fetch('./sw.js?v=2.1', {
-method: 'HEAD'
-});
+            p +=
+                "生成される英語プロンプト内の吹き出し指定";
 
-if (!res.ok) return;
+            p +=
+                "（speech bubble内の指定テキストなど）には、";
 
-await navigator.serviceWorker.register(
-'./sw.js?v=2.1'
-);
+            p +=
+                "以下の日本語表現をそのままの表記で";
 
-} catch (e) {
+            p +=
+                "正確に配置させてください。\n";
 
-console.warn(e);
+            p +=
+                `    ${dialogues}\n`;
+        }
 
-}
+        if (notes.trim()) {
 
-});
+            p +=
+                `  ・このページの個別補足指示（画面サイズ・アスペクト比など）: ${notes}\n`;
+        }
 
-}
+        p += "\n";
+
+        p +=
+            "[最終確認]\n";
+
+        p +=
+            "繰り返します。";
+
+        p +=
+            "画像の出力は完全に不要です。";
+
+        p +=
+            "一括コピー可能な状態の";
+
+        p +=
+            "『英語テキストプロンプト（文字列）』のみを";
+
+        p +=
+            "コードブロック形式（```）で出力してください。";
+
+        document.getElementById('outputText').value = p;
+
+        openModal();
+
+        autoSaveHistory(subject);
+    }
+
+    // =========================================================
+    // モーダル
+    // =========================================================
+
+    function openModal() {
+
+        document.getElementById('outputModal').style.display =
+            'flex';
+    }
+
+    function closeModal() {
+
+        document.getElementById('outputModal').style.display =
+            'none';
+    }
+
+    // =========================================================
+    // コピー
+    // =========================================================
+
+    async function copyToClipboard() {
+
+        const txt =
+            document.getElementById('outputText').value;
+
+        try {
+
+            if (
+                navigator.clipboard &&
+                navigator.clipboard.writeText
+            ) {
+
+                await navigator.clipboard.writeText(txt);
+
+            } else {
+
+                const textArea =
+                    document.getElementById('outputText');
+
+                textArea.select();
+
+                const ok =
+                    document.execCommand('copy');
+
+                if (!ok) {
+                    throw new Error('execCommand失敗');
+                }
+            }
+
+            alert(
+                "指示書をクリップボードにコピーしました。\n" +
+                "AIのチャット欄に貼り付けて送信してください。"
+            );
+
+        } catch (err) {
+
+            console.error(err);
+
+            alert(
+                "コピーに失敗しました。"
+            );
+        }
+    }
+
+    // =========================================================
+    // Service Worker
+    // =========================================================
+
+    if ('serviceWorker' in navigator) {
+
+        window.addEventListener('load', async () => {
+
+            try {
+
+                const res =
+                    await fetch('./sw.js', {
+                        method: 'HEAD'
+                    });
+
+                if (!res.ok) {
+                    return;
+                }
+
+                await navigator.serviceWorker.register('./sw.js');
+
+                console.log(
+                    'Service Worker 登録成功'
+                );
+
+            } catch (err) {
+
+                console.warn(
+                    'Service Worker スキップ',
+                    err
+                );
+            }
+        });
+    }
 
 </script>
 
