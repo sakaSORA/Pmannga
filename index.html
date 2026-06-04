@@ -90,6 +90,18 @@
             font-size: 0.9rem;
         }
 
+        /* ラベルエリアを横並びにして、右側にボタンを綺麗に配置するための補助クラス */
+        .label-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 6px;
+        }
+        .label-row label {
+            margin-bottom: 0;
+        }
+
         /* スマホの親指でのタップ、入力しやすさを担保する大きめのインプット領域（高さ44px以上） */
         select, textarea {
             background-color: #383838;
@@ -265,6 +277,23 @@
             background-color: #b33636;
         }
 
+        /* 鍵かっこ挿入用コンパクトボタンの装飾 */
+        .inline-insert-btn {
+            background-color: #444;
+            color: var(--accent-active);
+            border: 1px solid var(--border-color);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-family: var(--font-family);
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .inline-insert-btn:active {
+            background-color: #555;
+        }
+
         /* 出力モーダル */
         .modal-overlay {
             position: fixed;
@@ -407,7 +436,10 @@
             </div>
 
             <div class="form-group">
-                <label for="dialogues_text">台詞・キャラクターのセリフ（改行入力）：</label>
+                <div class="label-row">
+                    <label for="dialogues_text">セリフや設定（改行入力）：</label>
+                    <button type="button" class="inline-insert-btn" onclick="insertBrackets()">＋「」を入れる</button>
+                </div>
                 <textarea id="dialogues_text" rows="6" placeholder="「よしっ、いくぞ！」&#10;「うわっ！前がみえないぞ！？」&#10;「なんとかなるさ！」&#10;「大せいこう！」"></textarea>
             </div>
         </fieldset>
@@ -698,6 +730,29 @@
             document.getElementById('mode_mono').classList.remove('active');
         }
         syncTagButtonsWithTextarea();
+    }
+
+    // --------------------------------------------------------
+    // ＋「」を入れる ボタン用ロジック（改行コードLF統一仕様）
+    // --------------------------------------------------------
+    function insertBrackets() {
+        const textarea = document.getElementById('dialogues_text');
+        const currentText = textarea.value;
+        
+        // テキストが空、または末尾がすでに改行である場合はそのまま「」を付与
+        // 文字が入っている場合は、ルールに従いLF（\n）改行を挟んでから「」を挿入する
+        if (currentText === "") {
+            textarea.value = "「」";
+        } else if (currentText.endsWith("\n")) {
+            textarea.value = currentText + "「」";
+        } else {
+            textarea.value = currentText + "\n「」";
+        }
+        
+        // 入力しやすいように、カーソルを「」の間に自動で移動させフォーカスを合わせる
+        textarea.focus();
+        const targetPos = textarea.value.length - 1;
+        textarea.setSelectionRange(targetPos, targetPos);
     }
 
     function generateGeminiPrompt() {
