@@ -594,6 +594,39 @@
 
             </div>
 
+            <div
+                class="management-controls"
+                style="grid-template-columns:1fr 1fr;margin-top:6px;"
+            >
+
+                <button
+                    type="button"
+                    class="sub-btn"
+                    style="background-color:#5a4a8a;color:#fff;font-weight:bold;"
+                    onclick="exportCharacters()"
+                >
+                    📤 キャラデータ書き出し
+                </button>
+
+                <button
+                    type="button"
+                    class="sub-btn"
+                    style="background-color:#8a6a1a;color:#fff;font-weight:bold;"
+                    onclick="document.getElementById('importFileInput').click()"
+                >
+                    📥 キャラデータ読み込み
+                </button>
+
+            </div>
+
+            <input
+                type="file"
+                id="importFileInput"
+                accept=".json"
+                style="display:none;"
+                onchange="importCharacters(event)"
+            >
+
         </div>
 
     </div>
@@ -1194,6 +1227,172 @@
 
             select.value = "";
         }
+    }
+
+    // =========================================================
+    // キャラクターデータ エクスポート / インポート
+    // =========================================================
+
+    function exportCharacters() {
+
+        const chars = getCharacters();
+
+        if (chars.length === 0) {
+
+            alert(
+                "エクスポートできるキャラクターがありません。\n" +
+                "まずキャラクターを登録してください。"
+            );
+
+            return;
+        }
+
+        const exportData = {
+            appName: "漫画プロンプトビルダー",
+            version: 1,
+            exportedAt: new Date().toISOString(),
+            characters: chars
+        };
+
+        const json =
+            JSON.stringify(exportData, null, 2);
+
+        const blob =
+            new Blob([json], { type: "application/json" });
+
+        const url = URL.createObjectURL(blob);
+
+        const now = new Date();
+
+        const dateStr =
+            `${now.getFullYear()}` +
+            `${String(now.getMonth()+1).padStart(2,'0')}` +
+            `${String(now.getDate()).padStart(2,'0')}`;
+
+        const a = document.createElement('a');
+
+        a.href = url;
+        a.download = `manga_characters_${dateStr}.json`;
+
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        URL.revokeObjectURL(url);
+
+        alert(
+            `${chars.length}件のキャラクターデータを\n` +
+            "JSONファイルとして書き出しました。"
+        );
+    }
+
+    function importCharacters(event) {
+
+        const file = event.target.files[0];
+
+        if (!file) return;
+
+        // リセットしてから読み込む（同じファイルの再選択にも対応）
+        event.target.value = "";
+
+        const reader = new FileReader();
+
+        reader.onload = (e) => {
+
+            try {
+
+                const parsed =
+                    JSON.parse(e.target.result);
+
+                // バリデーション
+                if (
+                    !parsed.characters ||
+                    !Array.isArray(parsed.characters)
+                ) {
+
+                    alert(
+                        "このファイルは対応フォーマットではありません。\n" +
+                        "このアプリで書き出したJSONファイルを選んでください。"
+                    );
+
+                    return;
+                }
+
+                const incoming = parsed.characters;
+
+                if (incoming.length === 0) {
+
+                    alert(
+                        "ファイル内にキャラクターデータが見つかりませんでした。"
+                    );
+
+                    return;
+                }
+
+                const existingChars = getCharacters();
+
+                const choice = confirm(
+                    `📥 インポート内容：${incoming.length}件のキャラクター\n\n` +
+                    "【追加】現在のデータに追加しますか？\n" +
+                    "　→「OK」で追加（重複IDはスキップ）\n\n" +
+                    "【上書き】現在のデータをすべて置き換えますか？\n" +
+                    "　→「キャンセル」の後に確認します"
+                );
+
+                if (choice) {
+
+                    // 追加モード：重複IDはスキップ
+                    const existingIds =
+                        new Set(existingChars.map(c => c.id));
+
+                    const newChars =
+                        incoming.filter(c => !existingIds.has(c.id));
+
+                    const merged =
+                        [...newChars, ...existingChars];
+
+                    saveCharactersList(merged);
+
+                    alert(
+                        `✅ ${newChars.length}件のキャラクターを追加しました。\n` +
+                        (
+                            incoming.length - newChars.length > 0
+                                ? `（${incoming.length - newChars.length}件は重複のためスキップ）`
+                                : ""
+                        )
+                    );
+
+                } else {
+
+                    // 上書きモードの確認
+                    const overwrite = confirm(
+                        "⚠️ 現在の全キャラクターデータを削除して\n" +
+                        "インポートデータで上書きしますか？\n\n" +
+                        "この操作は元に戻せません。"
+                    );
+
+                    if (overwrite) {
+
+                        saveCharactersList(incoming);
+
+                        alert(
+                            `✅ ${incoming.length}件のキャラクターデータで上書きしました。`
+                        );
+                    }
+                }
+
+            } catch (err) {
+
+                console.error('インポートエラー', err);
+
+                alert(
+                    "ファイルの読み込みに失敗しました。\n" +
+                    "正しいJSONファイルか確認してください。"
+                );
+            }
+        };
+
+        reader.readAsText(file, 'UTF-8');
     }
 
     // =========================================================
