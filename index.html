@@ -991,16 +991,34 @@
     const DATA_LAYOUT = {
 
         "4コマ構成（日本の縦並び・おすすめ！）":
-            "vertical 4-panel comic strip, arranged sequentially from top to bottom in a single column",
+            "PANEL SHAPE: 4 panels in a single vertical column, stacked top to bottom. " +
+            "Each panel spans full page width. Uniform height is acceptable for 4-koma style. " +
+            "READING ORDER: strictly top to bottom, single column.",
 
         "3コマ（ちょっと短め）":
-            "3-panel comic layout, clean frames",
+            "PANEL SHAPE: 3 panels in a single vertical column. " +
+            "Each panel spans the full page width. Panel size may vary for dramatic effect. " +
+            "READING ORDER: top to bottom, single column.",
 
         "5〜7コマ（しっかりストーリー）":
-            "5 to 7 panels comic page layout",
+            "PANEL SHAPE: 5 to 7 panels with deliberately varied sizes. " +
+            "Mix large, medium, and small panels based on dramatic importance. " +
+            "A uniform equal-size grid is strictly forbidden — panels must differ in height or width. " +
+            "READING ORDER (independent from shape): right-to-left within every row, top-to-bottom between rows. " +
+            "In each row, the RIGHT panel is read BEFORE the left panel. " +
+            "Panel read sequence: [1]=Row1-RIGHT, [2]=Row1-LEFT, [3]=Row2-RIGHT, [4]=Row2-LEFT, [5]=Row3. " +
+            "This right-to-left rule applies to every row including row 2 and beyond without exception. " +
+            "Left-to-right ordering within any row is strictly forbidden.",
 
         "大ゴマ ＋ 小コマ（メリハリのある大迫力）":
-            "dynamic panel layout with one large splash panel and smaller secondary panels"
+            "PANEL SHAPE: one large dominant splash panel plus several smaller accent panels. " +
+            "The large panel must be visually dominant, at least 2x to 3x the size of small panels. " +
+            "The large splash panel must be positioned on the RIGHT side (top-right or center-right). " +
+            "Smaller panels are arranged to the LEFT of and/or BELOW the large panel. " +
+            "Placing the large panel on the left side is forbidden. " +
+            "READING ORDER (independent from shape): right-to-left, top-to-bottom. " +
+            "Large panel (right) is read first, then smaller panels flow left and downward. " +
+            "Left-to-right ordering within any row is forbidden."
     };
 
     let currentColorMode = "";
@@ -1788,27 +1806,39 @@
             "最高品質の指示書を組み立ててください。\n\n";
 
         p +=
-            "【必須要件・コマ割りのルール】\n";
+            "【必須要件A・コマ形状のルール】（読み順とは独立した別ルール）\n";
 
         p +=
-            "1. 各ページ内のコマ配置や構図は、";
+            "- 各ページのコマサイズは均等・同一グリッド（等分割）を禁止とする。\n";
 
         p +=
-            "読者の視線が「右から左、上から下へ」自然に誘導されるように設計すること。\n";
+            "- 大ゴマ・中コマ・小コマを演出・重要度に応じて必ず混在させること。\n";
 
         p +=
-            "2. 各ページのコマの大きさがすべて均等・同一にならないよう、";
+            "- 均等な十字分割やただの格子状分割（アメリカ式等幅グリッド）は、4コマ指定を除き絶対禁止。\n";
 
         p +=
-            "重要度や演出に合わせてコマの大きさにしっかりとメリハリ";
+            "- 指定されたコマ構成（5〜7コマ、大ゴマ＋小コマ等）の形状指定を最優先で遵守すること。\n\n";
 
         p +=
-            "（大ゴマ・小コマ等の変化）をつけること。";
+            "【必須要件B・読み順のルール】（コマ形状とは完全に独立したルール）\n";
 
         p +=
-            "(※ただし4コマ構成が指定されているページは除く)\n\n";
+            "- 日本の漫画は『右綴じ（right-binding）』形式。コマ形状にかかわらず、各段の読み順は必ず右コマ→左コマを維持すること。\n";
 
         p +=
+            "- 各段（row）の中で、右側のコマが左側のコマより先に読まれる配置にすること。\n";
+
+        p +=
+            "- 『アメコミ式（左→右）』は全段において禁止。1段目だけでなく2段目・3段目以降も例外なく右優先を維持すること。\n";
+
+        p +=
+            "- 例：右に大ゴマ・左に小コマの場合 → 大ゴマ（右）を先に読み、小コマ（左）を後に読む。\n";
+
+        p +=
+            "- コマ番号：[1]=1段目・右, [2]=1段目・左, [3]=2段目・右, [4]=2段目・左 … 右→左→次の段の順。\n\n";
+
+                p +=
             "【出力に関するお願い】\n";
 
         p +=
