@@ -817,7 +817,7 @@
                 <textarea
                     id="dialogues_text"
                     rows="6"
-                    placeholder="場所は夕暮れの校庭&#10;「よしっ、いくぞ！」&#10;「うわっ！前がみえないぞ！？」&#10;「なんとかなるさ！」&#10;「大せいこう！」"
+                    placeholder="夕暮れの校庭に立つ場面から&#10;「よしっ、いくぞ！」&#10;「うわっ！前がみえないぞ！？」&#10;「なんとかなるさ！」&#10;「大せいこう！」"
                 ></textarea>
 
             </div>
@@ -939,6 +939,18 @@
 
     const DATA_STYLE = {
 
+        "現代アニメ風":
+            "modern anime style, vibrant coloring, clean shading, beautiful details",
+
+        "少年漫画風":
+            "shonen manga style, dynamic composition, energetic and sharp lines",
+
+        "少女漫画風":
+            "shoujo manga style, delicate lines, expressive emotional eyes",
+
+        "水彩画風":
+            "watercolor painting style, soft bleeding ink, pastel translucent tones",
+
         "ゆるキャラ風":
             "yuru-chara style, cute mascot, simplified vector",
 
@@ -957,20 +969,11 @@
         "デフォルメマスコット風":
             "chibi mascot style, super deformed character art",
 
-        "現代アニメ風":
-            "modern anime style, vibrant coloring, clean shading, beautiful details",
-
-        "少年漫画風":
-            "shonen manga style, dynamic composition, energetic and sharp lines",
-
         "北斗の拳風":
             "80s masculine retro manga style, muscular anatomy, thick ink lines, Hokuto no Ken aesthetic",
 
         "JOJO風":
             "highly stylized manga art, dramatic shading, bold heavy lines, JoJo aesthetic",
-
-        "少女漫画風":
-            "shoujo manga style, delicate lines, expressive emotional eyes",
 
         "ベルバラ風":
             "classic 70s shoujo manga style, retro anime vintage, dramatic eyes, roses aesthetic",
@@ -981,18 +984,25 @@
         "サウスパーク風":
             "2D cutout animation style, South Park aesthetic, minimalist geometric papercraft",
 
-        "水彩画風":
-            "watercolor painting style, soft bleeding ink, pastel translucent tones",
-
         "ピクセルアート風":
             "8bit pixel art style, retro video game aesthetic"
     };
 
     const DATA_LAYOUT = {
 
-        "4コマ構成（日本の縦並び・おすすめ！）":
+        "4コマ構成（縦並び・おすすめ！）":
             "PANEL SHAPE: 4 panels in a single vertical column, stacked top to bottom. " +
             "Each panel spans full page width. Uniform height is acceptable for 4-koma style. " +
+            "READING ORDER: strictly top to bottom, single column.",
+
+        "5コマ構成（縦並び・少し追加）":
+            "PANEL SHAPE: 5 panels in a single vertical column, stacked top to bottom. " +
+            "Each panel spans full page width. Uniform height is acceptable for 5-koma style. " +
+            "READING ORDER: strictly top to bottom, single column.",
+
+        "6コマ構成（縦並び・スマホサイズ用）":
+            "PANEL SHAPE: 6 panels in a single vertical column, stacked top to bottom. " +
+            "Each panel spans full page width. Uniform height is acceptable for 6-koma style. " +
             "READING ORDER: strictly top to bottom, single column.",
 
         "3コマ（ちょっと短め）":
