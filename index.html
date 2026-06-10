@@ -387,7 +387,7 @@
 
             border: 1px solid var(--border-color);
 
-            padding: 8px 4px;
+            padding: 4px 10px;
 
             border-radius: 4px;
 
@@ -398,11 +398,6 @@
             cursor: pointer;
 
             transition: background-color 0.2s;
-
-            flex: 1 1 calc(33.333% - 6px);
-            min-width: 0;
-            text-align: center;
-            box-sizing: border-box;
         }
 
         .inline-insert-btn:active {
@@ -749,19 +744,10 @@
                     <button
                         type="button"
                         class="tag-btn"
-                        data-tag=", do not write character names or Japanese quotation marks inside speech bubbles"
+                        data-tag=" ふきだし内に「」や識別のための名前をかきこまないで"
                         onclick="toggleTagButton(this)"
                     >
                         ✨ ふきだし内「」キャラ名禁止
-                    </button>
-
-                    <button
-                        type="button"
-                        class="tag-btn"
-                        data-tag=", all speech bubble text written horizontally left-to-right, horizontal writing direction in all bubbles, vertical text in speech bubbles strictly forbidden"
-                        onclick="toggleTagButton(this)"
-                    >
-                        ↔️ セリフ横書き固定（文字崩れ防止）
                     </button>
 
                     <button
@@ -812,58 +798,18 @@
 
             <div class="form-group">
 
-                <label for="dialogues_text" style="display:block; margin-bottom:6px;">
-                    セリフや設定（改行入力）：
-                </label>
+                <div class="label-row">
 
-                <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:6px;">
+                    <label for="dialogues_text">
+                        セリフや設定（改行入力）：
+                    </label>
 
                     <button
                         type="button"
                         class="inline-insert-btn"
                         onclick="insertBrackets()"
                     >
-                        「」を入れる
-                    </button>
-
-                    <button
-                        type="button"
-                        class="inline-insert-btn"
-                        onclick="insertTowrite('scene')"
-                    >
-                        🌄 場面・背景
-                    </button>
-
-                    <button
-                        type="button"
-                        class="inline-insert-btn"
-                        onclick="insertTowrite('action')"
-                    >
-                        🎬 動作・表情
-                    </button>
-
-                    <button
-                        type="button"
-                        class="inline-insert-btn"
-                        onclick="insertTowrite('change')"
-                    >
-                        ✂️ 場面転換
-                    </button>
-
-                    <button
-                        type="button"
-                        class="inline-insert-btn"
-                        onclick="insertTowrite('bg')"
-                    >
-                        🖼️ 背景大ゴマ
-                    </button>
-
-                    <button
-                        type="button"
-                        class="inline-insert-btn"
-                        onclick="insertTowrite('mono')"
-                    >
-                        💭 モノローグ
+                        ＋「」を入れる
                     </button>
 
                 </div>
@@ -1035,14 +981,32 @@
         "ディズニー風":
             "classic western 3D animation style, Disney character aesthetic",
 
-        "サウスパーク風":
-            "2D cutout animation style, South Park aesthetic, minimalist geometric papercraft",
+        "雑誌の表紙風":
+            "magazine cover style, professional layout, bold typography text elements, structured framing, stylish composition",
 
         "ピクセルアート風":
             "8bit pixel art style, retro video game aesthetic"
     };
 
     const DATA_LAYOUT = {
+
+        "1コマ構成（ぶち抜きイラスト）":
+            "PANEL SHAPE: 1 panels in a single vertical column, stacked top to bottom. " +
+            "Each panel spans full page width. Uniform height is acceptable for 1-koma style. " +
+            "READING ORDER: strictly top to bottom, single column.",
+
+
+        "2コマ構成（縦並び・即落ち）":
+            "PANEL SHAPE: 2 panels in a single vertical column, stacked top to bottom. " +
+            "Each panel spans full page width. Uniform height is acceptable for 2-koma style. " +
+            "READING ORDER: strictly top to bottom, single column.",
+
+
+        "3コマ構成（短め）":
+            "PANEL SHAPE: 3 panels in a single vertical column, stacked top to bottom. " +
+            "Each panel spans full page width. Uniform height is acceptable for 3-koma style. " +
+            "READING ORDER: strictly top to bottom, single column.",
+
 
         "4コマ構成（縦並び・おすすめ！）":
             "PANEL SHAPE: 4 panels in a single vertical column, stacked top to bottom. " +
@@ -1058,11 +1022,6 @@
             "PANEL SHAPE: 6 panels in a single vertical column, stacked top to bottom. " +
             "Each panel spans full page width. Uniform height is acceptable for 6-koma style. " +
             "READING ORDER: strictly top to bottom, single column.",
-
-        "3コマ（ちょっと短め）":
-            "PANEL SHAPE: 3 panels in a single vertical column. " +
-            "Each panel spans the full page width. Panel size may vary for dramatic effect. " +
-            "READING ORDER: top to bottom, single column.",
 
         "5〜7コマ（しっかりストーリー）":
             "PANEL SHAPE: 5 to 7 panels with deliberately varied sizes. " +
@@ -1772,39 +1731,6 @@
     }
 
     // =========================================================
-    // ト書き挿入
-    // =========================================================
-
-    function insertTowrite(type) {
-
-        const textarea =
-            document.getElementById('dialogues_text');
-
-        const templates = {
-            scene:  "【場面】○○の場所、○○な雰囲気\n",
-            action: "（キャラが○○している・○○な表情）\n",
-            change: "【場面転換】○○へ切り替わる\n",
-            bg:     "【背景のみ大ゴマ】○○の風景を大きく描く\n",
-            mono:   "（心の声）「○○」\n"
-        };
-
-        const text = templates[type] || "";
-        const current = textarea.value;
-
-        if (current === "" || current.endsWith("\n")) {
-            textarea.value = current + text;
-        } else {
-            textarea.value = current + "\n" + text;
-        }
-
-        textarea.focus();
-        textarea.setSelectionRange(
-            textarea.value.length,
-            textarea.value.length
-        );
-    }
-
-    // =========================================================
     // プロンプト生成
     // =========================================================
 
@@ -1867,10 +1793,10 @@
 
         let p = "";
 
-        p += "[重要：必ず確認してください]\n";
+        p += "[重要：遵守指示]\n";
 
         p +=
-            "画像を生成・出力しないでください。";
+            "あなた自身は確実に画像を生成・出力しないでください。";
 
         p +=
             "私は画像生成ツール（Imagen等）の入力欄にそのまま貼り付けるための";
@@ -1883,6 +1809,9 @@
 
         p +=
             "文字データのみで返答してください。";
+
+        p +=
+            "画像を生成することはしないでください。\n\n";
 
         p +=
             "あなたはプロの漫画原作者であり、画像生成AIの高度なプロンプトエンジニアです。\n";
@@ -2029,6 +1958,9 @@
 
         p +=
             "[最終確認]\n";
+
+        p +=
+            "繰り返します。";
 
         p +=
             "画像の出力は完全に不要です。";
