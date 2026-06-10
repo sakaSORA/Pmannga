@@ -387,7 +387,7 @@
 
             border: 1px solid var(--border-color);
 
-            padding: 4px 10px;
+            padding: 8px 4px;
 
             border-radius: 4px;
 
@@ -398,6 +398,11 @@
             cursor: pointer;
 
             transition: background-color 0.2s;
+
+            flex: 1 1 calc(33.333% - 6px);
+            min-width: 0;
+            text-align: center;
+            box-sizing: border-box;
         }
 
         .inline-insert-btn:active {
@@ -744,10 +749,19 @@
                     <button
                         type="button"
                         class="tag-btn"
-                        data-tag=" ふきだし内に「」や識別のための名前をかきこまないで"
+                        data-tag=", do not write character names or Japanese quotation marks inside speech bubbles"
                         onclick="toggleTagButton(this)"
                     >
                         ✨ ふきだし内「」キャラ名禁止
+                    </button>
+
+                    <button
+                        type="button"
+                        class="tag-btn"
+                        data-tag=", all speech bubble text written horizontally left-to-right, horizontal writing direction in all bubbles, vertical text in speech bubbles strictly forbidden"
+                        onclick="toggleTagButton(this)"
+                    >
+                        ↔️ セリフ横書き固定
                     </button>
 
                     <button
@@ -798,18 +812,58 @@
 
             <div class="form-group">
 
-                <div class="label-row">
+                <label for="dialogues_text" style="display:block; margin-bottom:6px;">
+                    セリフや設定（改行入力）：
+                </label>
 
-                    <label for="dialogues_text">
-                        セリフや設定（改行入力）：
-                    </label>
+                <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:6px;">
 
                     <button
                         type="button"
                         class="inline-insert-btn"
                         onclick="insertBrackets()"
                     >
-                        ＋「」を入れる
+                        「」を入れる
+                    </button>
+
+                    <button
+                        type="button"
+                        class="inline-insert-btn"
+                        onclick="insertTowrite('scene')"
+                    >
+                        🌄 場面・背景
+                    </button>
+
+                    <button
+                        type="button"
+                        class="inline-insert-btn"
+                        onclick="insertTowrite('action')"
+                    >
+                        🎬 動作・表情
+                    </button>
+
+                    <button
+                        type="button"
+                        class="inline-insert-btn"
+                        onclick="insertTowrite('change')"
+                    >
+                        ✂️ 場面転換
+                    </button>
+
+                    <button
+                        type="button"
+                        class="inline-insert-btn"
+                        onclick="insertTowrite('bg')"
+                    >
+                        🖼️ 背景のみ
+                    </button>
+
+                    <button
+                        type="button"
+                        class="inline-insert-btn"
+                        onclick="insertTowrite('mono')"
+                    >
+                        💭 モノローグ
                     </button>
 
                 </div>
@@ -1024,6 +1078,7 @@
             "READING ORDER: strictly top to bottom, single column.",
 
         "5〜7コマ（しっかりストーリー）":
+
             "PANEL SHAPE: 5 to 7 panels with deliberately varied sizes. " +
             "Mix large, medium, and small panels based on dramatic importance. " +
             "A uniform equal-size grid is strictly forbidden — panels must differ in height or width. " +
@@ -1727,6 +1782,39 @@
         textarea.setSelectionRange(
             targetPos,
             targetPos
+        );
+    }
+
+    // =========================================================
+    // ト書き挿入
+    // =========================================================
+
+    function insertTowrite(type) {
+
+        const textarea =
+            document.getElementById('dialogues_text');
+
+        const templates = {
+            scene:  "【場面】○○の場所、○○な雰囲気\n",
+            action: "（キャラが○○している・○○な表情）\n",
+            change: "【場面転換】○○へ切り替わる\n",
+            bg:     "【背景のみ大ゴマ】○○の風景を大きく描く\n",
+            mono:   "（心の声）「○○」\n"
+        };
+
+        const text = templates[type] || "";
+        const current = textarea.value;
+
+        if (current === "" || current.endsWith("\n")) {
+            textarea.value = current + text;
+        } else {
+            textarea.value = current + "\n" + text;
+        }
+
+        textarea.focus();
+        textarea.setSelectionRange(
+            textarea.value.length,
+            textarea.value.length
         );
     }
 
