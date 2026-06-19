@@ -104,6 +104,28 @@
             font-size: 0.95rem;
         }
 
+        .legend-with-action {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .clear-input-btn {
+            background-color: #7a3030;
+            color: #fff;
+            border: 1px solid #a94a4a;
+            border-radius: 5px;
+            padding: 4px 9px;
+            font-family: var(--font-family);
+            font-size: 0.75rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .clear-input-btn:active {
+            background-color: #a13d3d;
+        }
+
         .form-group {
             margin-bottom: 14px;
 
@@ -640,7 +662,18 @@
 
         <fieldset>
 
-            <legend>★ 世界観・スタイルの設定</legend>
+            <legend>
+                <span class="legend-with-action">
+                    <span>★ 世界観・スタイルの設定</span>
+                    <button
+                        type="button"
+                        class="clear-input-btn"
+                        onclick="clearSubjectInput()"
+                    >
+                        入力クリア
+                    </button>
+                </span>
+            </legend>
 
             <div class="form-group">
 
@@ -812,9 +845,18 @@
 
             <div class="form-group">
 
-                <label for="dialogues_text" style="display:block; margin-bottom:6px;">
-                    セリフや設定（改行入力）：
-                </label>
+                <div class="label-row">
+                    <label for="dialogues_text">
+                        セリフや設定（改行入力）：
+                    </label>
+                    <button
+                        type="button"
+                        class="clear-input-btn"
+                        onclick="clearDialoguesInput()"
+                    >
+                        入力クリア
+                    </button>
+                </div>
 
                 <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:6px;">
 
@@ -1147,6 +1189,28 @@
     function scheduleDraftSave() {
         clearTimeout(draftSaveTimer);
         draftSaveTimer = setTimeout(saveDraft, 400);
+    }
+
+    function clearSubjectInput() {
+        const textarea = document.getElementById('subject_custom');
+        if (!textarea.value) return;
+
+        if (!confirm('キャラクター設定欄の入力内容を削除しますか？')) return;
+
+        textarea.value = '';
+        saveDraft();
+        textarea.focus();
+    }
+
+    function clearDialoguesInput() {
+        const textarea = document.getElementById('dialogues_text');
+        if (!textarea.value) return;
+
+        if (!confirm('セリフや設定欄の入力内容を削除しますか？')) return;
+
+        textarea.value = '';
+        saveDraft();
+        textarea.focus();
     }
 
     function saveDraft() {
