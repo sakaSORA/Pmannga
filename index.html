@@ -952,17 +952,12 @@
     // 安定性最優先ユーティリティ
     // =========================================================
 
-    function safeParseJSON(raw, fallback = []) {
-        try {
-            return raw ? JSON.parse(raw) : fallback;
-        } catch (e) {
-            console.error('JSON解析失敗', e);
-            return fallback;
-        }
-    }
-
     function safeLocalStorageSet(key, value) {
         try {
+            const previous = localStorage.getItem(key);
+            if (previous !== null) {
+                localStorage.setItem(`${key}_backup`, previous);
+            }
             localStorage.setItem(key, value);
             return true;
         } catch (e) {
@@ -980,7 +975,18 @@
     function safeLocalStorageGet(key, fallback = []) {
         try {
             const raw = localStorage.getItem(key);
-            return safeParseJSON(raw, fallback);
+            if (raw === null) return fallback;
+            try {
+                return JSON.parse(raw);
+            } catch (primaryError) {
+                const backup = localStorage.getItem(`${key}_backup`);
+                if (backup !== null) {
+                    const recovered = JSON.parse(backup);
+                    localStorage.setItem(key, backup);
+                    return recovered;
+                }
+                throw primaryError;
+            }
         } catch (e) {
             console.error('localStorage取得失敗', e);
             return fallback;
@@ -1052,13 +1058,13 @@
 
         "2コマ構成（縦並び・即落ち）":
             "PANEL SHAPE: 2 panels in a single vertical column, stacked top to bottom. " +
-            "Each panel spans full page width. Uniform height is acceptable for 2-koma style. " +
+            "Each panel spans full page width, but their heights must differ according to dramatic importance. " +
             "READING ORDER: strictly top to bottom, single column.",
 
 
         "3コマ構成（短め）":
             "PANEL SHAPE: 3 panels in a single vertical column, stacked top to bottom. " +
-            "Each panel spans full page width. Uniform height is acceptable for 3-koma style. " +
+            "Each panel spans full page width, with clearly varied panel heights. An equal-height grid is forbidden. " +
             "READING ORDER: strictly top to bottom, single column.",
 
 
@@ -1069,12 +1075,12 @@
 
         "5コマ構成（縦並び・少し追加）":
             "PANEL SHAPE: 5 panels in a single vertical column, stacked top to bottom. " +
-            "Each panel spans full page width. Uniform height is acceptable for 5-koma style. " +
+            "Each panel spans full page width, with deliberately varied heights. An equal-height grid is forbidden. " +
             "READING ORDER: strictly top to bottom, single column.",
 
         "6コマ構成（縦並び・スマホサイズ用）":
             "PANEL SHAPE: 6 panels in a single vertical column, stacked top to bottom. " +
-            "Each panel spans full page width. Uniform height is acceptable for 6-koma style. " +
+            "Each panel spans full page width, with deliberately varied heights. An equal-height grid is forbidden. " +
             "READING ORDER: strictly top to bottom, single column.",
 
         "5〜7コマ（しっかりストーリー）":
@@ -1100,6 +1106,8 @@
     };
 
     let currentColorMode = "";
+    const DRAFT_KEY = 'manga_prompt_draft';
+    let draftSaveTimer = null;
 
     // =========================================================
     // 初期化
@@ -1118,13 +1126,52 @@
         );
 
         document.getElementById('panel_layout').value =
-            "4コマ構成（日本の縦並び・おすすめ！）";
+            "4コマ構成（縦並び・おすすめ！）";
+
+        restoreDraft();
 
         updateHistoryCombo();
         updateCharacterCombo();
 
         syncTagButtonsWithTextarea();
+        requestPersistentStorage();
+
+        ['subject_custom', 'manga_style', 'panel_layout', 'additional_notes', 'dialogues_text']
+            .forEach(id => {
+                const element = document.getElementById(id);
+                element?.addEventListener('input', scheduleDraftSave);
+                element?.addEventListener('change', scheduleDraftSave);
+            });
     });
+
+    function scheduleDraftSave() {
+        clearTimeout(draftSaveTimer);
+        draftSaveTimer = setTimeout(saveDraft, 400);
+    }
+
+    function saveDraft() {
+        safeLocalStorageSet(DRAFT_KEY, JSON.stringify({
+            version: 1,
+            updatedAt: Date.now(),
+            data: getCurrentState()
+        }));
+    }
+
+    function restoreDraft() {
+        const draft = safeLocalStorageGet(DRAFT_KEY, null);
+        if (!draft || !draft.data || typeof draft.data !== 'object') return;
+        applyStateToUI(draft.data);
+    }
+
+    async function requestPersistentStorage() {
+        try {
+            if (navigator.storage?.persist) {
+                await navigator.storage.persist();
+            }
+        } catch (error) {
+            console.warn('永続保存の申請に失敗しました。', error);
+        }
+    }
 
     function initSelectOptions(elementId, keys) {
 
@@ -1167,6 +1214,8 @@
         } else {
             setColorMode(mode);
         }
+
+        scheduleDraftSave();
     }
 
     // =========================================================
@@ -1174,22 +1223,18 @@
     // =========================================================
 
     function getCharacters() {
+        const value = safeLocalStorageGet('manga_prompt_characters', []);
+        if (!Array.isArray(value)) return [];
+        return value.filter(isValidCharacter);
+    }
 
-        try {
-
-            return safeLocalStorageGet(
-                'manga_prompt_characters',
-                []
-            );
-
-        } catch (e) {
-
-            console.error('キャラクターデータ破損', e);
-
-            localStorage.removeItem('manga_prompt_characters');
-
-            return [];
-        }
+    function isValidCharacter(character) {
+        return character &&
+            (typeof character.id === 'string' || typeof character.id === 'number') &&
+            typeof character.name === 'string' &&
+            character.name.trim() !== '' &&
+            typeof character.details === 'string' &&
+            character.details.trim() !== '';
     }
 
     function saveCharactersList(list) {
@@ -1295,6 +1340,7 @@
         }
 
         select.value = "";
+        scheduleDraftSave();
     }
 
     function deleteCharacterFromList() {
@@ -1372,18 +1418,18 @@
         const dateStr =
             `${now.getFullYear()}` +
             `${String(now.getMonth()+1).padStart(2,'0')}` +
-            `${String(now.getDate()).padStart(2,'0 Genn')}`;
+            `${String(now.getDate()).padStart(2,'0')}`;
 
         const a = document.createElement('a');
 
         a.href = url;
-        a.download = `キャラBUrs_${dateStr}.json`;
+        a.download = `キャラクターBU_${dateStr}.json`;
 
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
 
-        URL.revokeObjectURL(url);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
 
         alert(
             `${chars.length}件のキャラクターデータを\n` +
@@ -1423,7 +1469,16 @@
                     return;
                 }
 
-                const incoming = parsed.characters;
+                const incoming = parsed.characters
+                    .filter(isValidCharacter)
+                    .map(character => ({
+                        id: String(character.id),
+                        name: character.name.trim(),
+                        details: character.details.trim()
+                    }))
+                    .filter((character, index, all) =>
+                        all.findIndex(item => item.id === character.id) === index
+                    );
 
                 if (incoming.length === 0) {
 
@@ -1440,15 +1495,14 @@
                     `📥 インポート内容：${incoming.length}件のキャラクター\n\n` +
                     "【追加】現在のデータに追加しますか？\n" +
                     " →「OK」で追加（重複IDはスキップ）\n\n" +
-                    "【上書き】現在のデータをすべて置き換えますか？\n" +
-                    " →「キャンセル」の後に確認します"
+                    "「キャンセル」を押すと、次に上書きするか確認します。"
                 );
 
                 if (choice) {
 
                     // 追加モード：重複IDはスキップ
                     const existingIds =
-                        new Set(existingChars.map(c => c.id));
+                        new Set(existingChars.map(c => String(c.id)));
 
                     const newChars =
                         incoming.filter(c => !existingIds.has(c.id));
@@ -1473,7 +1527,7 @@
                     const overwrite = confirm(
                         "⚠️ 現在の全キャラクターデータを削除して\n" +
                         "インポートデータで上書きしますか？\n\n" +
-                        "この操作は元に戻せません。"
+                        "上書きしない場合は「キャンセル」で取込を中止します。"
                     );
 
                     if (overwrite) {
@@ -1495,6 +1549,10 @@
                     "正しいJSONファイルか確認してください。"
                 );
             }
+        };
+
+        reader.onerror = () => {
+            alert("ファイルを読み込めませんでした。");
         };
 
         reader.readAsText(file, 'UTF-8');
@@ -1529,6 +1587,8 @@
                 textarea.value += tagText;
             }
         }
+
+        scheduleDraftSave();
     }
 
     function syncTagButtonsWithTextarea() {
@@ -1565,22 +1625,15 @@
     // =========================================================
 
     function getHistory() {
-
-        try {
-
-            return safeLocalStorageGet(
-                'manga_prompt_history',
-                []
-            );
-
-        } catch (e) {
-
-            console.error('履歴データ破損', e);
-
-            localStorage.removeItem('manga_prompt_history');
-
-            return [];
-        }
+        const value = safeLocalStorageGet('manga_prompt_history', []);
+        if (!Array.isArray(value)) return [];
+        return value.filter(item =>
+            item &&
+            (typeof item.id === 'string' || typeof item.id === 'number') &&
+            typeof item.title === 'string' &&
+            item.data &&
+            typeof item.data === 'object'
+        );
     }
 
     function saveHistoryList(list) {
@@ -1703,6 +1756,7 @@
         if (!target) return;
 
         applyStateToUI(target.data);
+        saveDraft();
     }
 
     function deleteHistory() {
@@ -1731,10 +1785,14 @@
             d.subject || '';
 
         document.getElementById('manga_style').value =
-            d.style || '';
+            Object.prototype.hasOwnProperty.call(DATA_STYLE, d.style)
+                ? d.style
+                : Object.keys(DATA_STYLE)[0];
 
         document.getElementById('panel_layout').value =
-            d.layout || '';
+            Object.prototype.hasOwnProperty.call(DATA_LAYOUT, d.layout)
+                ? d.layout
+                : "4コマ構成（縦並び・おすすめ！）";
 
         document.getElementById('additional_notes').value =
             d.notes || '';
@@ -1783,6 +1841,8 @@
             targetPos,
             targetPos
         );
+
+        scheduleDraftSave();
     }
 
     // =========================================================
@@ -1816,6 +1876,8 @@
             textarea.value.length,
             textarea.value.length
         );
+
+        scheduleDraftSave();
     }
 
     // =========================================================
@@ -1933,6 +1995,9 @@
 
         p +=
             "- 指定されたコマ構成（5〜7コマ、大ゴマ＋小コマ等）の形状指定を最優先で遵守すること。\n\n";
+
+        p +=
+            "- 個別のコマ構成指定と本共通ルールが矛盾する場合は、本共通ルールを優先すること。\n\n";
 
         p +=
             "【必須要件B・読み順のルール】（コマ形状とは完全に独立したルール）\n";
@@ -2070,6 +2135,7 @@
         openModal();
 
         autoSaveHistory(subject);
+        saveDraft();
     }
 
     // =========================================================
@@ -2141,33 +2207,10 @@
     // =========================================================
 
     if ('serviceWorker' in navigator) {
-
-        window.addEventListener('load', async () => {
-
-            try {
-
-                const res =
-                    await fetch('./sw.js', {
-                        method: 'HEAD'
-                    });
-
-                if (!res.ok) {
-                    return;
-                }
-
-                await navigator.serviceWorker.register('./sw.js');
-
-                console.log(
-                    'Service Worker 登録成功'
-                );
-
-            } catch (err) {
-
-                console.warn(
-                    'Service Worker スキップ',
-                    err
-                );
-            }
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js').catch(err => {
+                console.warn('Service Worker 登録失敗', err);
+            });
         });
     }
 
