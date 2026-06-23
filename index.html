@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>漫画プロンプトビルダー for 生成AI</title>
 
     <link rel="manifest" href="manifest.json">
@@ -684,7 +684,6 @@
                 <textarea
                     id="subject_custom"
                     rows="3"
-                    required
                     placeholder="例：&#10;シズク（ジト目で大人しいダウナー系の少女）&#10;ビルダーくん（アプリの妖精。優しく教えてくれるマスコット）"
                 ></textarea>
 
@@ -872,14 +871,16 @@
                         type="button"
                         class="inline-insert-btn"
                         onclick="insertTowrite('scene')"
+                        title="場所、時間帯、雰囲気を指定します"
                     >
-                        🌄 場面・背景
+                        🌄 場所・時間
                     </button>
 
                     <button
                         type="button"
                         class="inline-insert-btn"
                         onclick="insertTowrite('action')"
+                        title="誰が、何をして、どんな表情かを指定します"
                     >
                         🎬 動作・表情
                     </button>
@@ -888,6 +889,7 @@
                         type="button"
                         class="inline-insert-btn"
                         onclick="insertTowrite('change')"
+                        title="現在の場面から次の場面への切り替えを指定します"
                     >
                         ✂️ 場面転換
                     </button>
@@ -896,18 +898,24 @@
                         type="button"
                         class="inline-insert-btn"
                         onclick="insertTowrite('bg')"
+                        title="人物より背景や風景を大きく見せたいときに使います"
                     >
-                        🖼️ 背景のみ
+                        🖼️ 背景を見せる
                     </button>
 
                     <button
                         type="button"
                         class="inline-insert-btn"
                         onclick="insertTowrite('mono')"
+                        title="キャラクターの口に出さない心の声を指定します"
                     >
                         💭 モノローグ
                     </button>
 
+                </div>
+
+                <div style="font-size:0.78rem;color:#c8c8c8;margin-bottom:6px;">
+                    ボタンでひな形を挿入し、「○○」の部分だけを書き換えてください。不要な項目は削除できます。
                 </div>
 
                 <textarea
@@ -1214,17 +1222,23 @@
     }
 
     function saveDraft() {
-        safeLocalStorageSet(DRAFT_KEY, JSON.stringify({
-            version: 1,
-            updatedAt: Date.now(),
-            data: getCurrentState()
-        }));
+        safeLocalStorageSet(
+            DRAFT_KEY,
+            JSON.stringify(getCurrentState())
+        );
     }
 
     function restoreDraft() {
         const draft = safeLocalStorageGet(DRAFT_KEY, null);
-        if (!draft || !draft.data || typeof draft.data !== 'object') return;
-        applyStateToUI(draft.data);
+        if (!draft || typeof draft !== 'object') return;
+
+        // 旧形式（{ version, updatedAt, data }）も引き続き復元する。
+        const state =
+            draft.data && typeof draft.data === 'object'
+                ? draft.data
+                : draft;
+
+        applyStateToUI(state);
     }
 
     async function requestPersistentStorage() {
@@ -1634,6 +1648,36 @@
         const tagText =
             btn.getAttribute('data-tag');
 
+        const isAspectRatio =
+            /^ --ar \d+:\d+$/.test(tagText);
+
+        if (isAspectRatio) {
+            const wasActive =
+                btn.classList.contains('active');
+
+            document
+                .querySelectorAll('.tag-buttons .tag-btn[data-tag^=" --ar "]')
+                .forEach(aspectButton => {
+                    const aspectTag =
+                        aspectButton.getAttribute('data-tag');
+
+                    aspectButton.classList.remove('active');
+
+                    textarea.value =
+                        textarea.value
+                            .split(aspectTag)
+                            .join('');
+                });
+
+            if (!wasActive) {
+                btn.classList.add('active');
+                textarea.value += tagText;
+            }
+
+            scheduleDraftSave();
+            return;
+        }
+
         if (btn.classList.contains('active')) {
 
             btn.classList.remove('active');
@@ -1919,11 +1963,11 @@
             document.getElementById('dialogues_text');
 
         const templates = {
-            scene:  "【場面】○○の場所、○○な雰囲気\n",
-            action: "（キャラが○○している・○○な表情）\n",
-            change: "【場面転換】○○へ切り替わる\n",
-            bg:     "【背景のみ大ゴマ】○○の風景を大きく描く\n",
-            mono:   "（心の声）「○○」\n"
+            scene:  "【場所・時間】場所：○○／時間帯：○○／雰囲気：○○\n",
+            action: "【動作・表情】キャラ名：○○／動作：○○／表情：○○\n",
+            change: "【場面転換】○○の場面から、○○の場面へ切り替わる\n",
+            bg:     "【背景を見せる】場所・風景：○○／特に見せたいもの：○○\n",
+            mono:   "【心の声】キャラ名：○○／心の声：「○○」\n"
         };
 
         const text = templates[type] || "";
@@ -1995,6 +2039,9 @@
         const layout =
             DATA_LAYOUT[layoutKey] || layoutKey;
 
+        const isSingleVerticalColumn =
+            layout.includes("single vertical column");
+
         const notes =
             document.getElementById('additional_notes').value;
 
@@ -2016,16 +2063,38 @@
             "私は画像生成ツール（Imagen等）の入力欄にそのまま貼り付けるための";
 
         p +=
-            "『英語のテキストプロンプト（文字）』だけを求めています。";
+            "テキストプロンプトを求めています。";
 
         p +=
-            "出力は必ずテキスト、あるいはマークダウンのコードブロック形式（```）を用い、";
+            "プロンプト本文と説明文は英語で作成してください。";
 
         p +=
-            "文字データのみで返答してください。";
+            "ただし、入力された日本語のセリフは翻訳せず、そのまま保持してください。";
+
+        if (!isSingleVerticalColumn) {
+            p +=
+                "また、コードブロック形式の先頭に日本語で";
+
+            p +=
+                "【日本の漫画形式として、右から左・上から下へと自然に読めるコマ割りにしてください。視線誘導だけは日本式の読み順に従わせてください。】";
+
+            p +=
+                "と付け加えてください。";
+        }
 
         p +=
-            "コードブロック形式の先頭に日本語で【日本の漫画形式として、右から左・上から下へと自然に読めるコマ割りにしてください。視線誘導だけは日本式の読み順に従わせてください。】と付け加えてください。";
+            "上記の日本語セリフ";
+
+        if (!isSingleVerticalColumn) {
+            p +=
+                "と指定された日本語冒頭文";
+        }
+
+        p +=
+            "以外の日本語は出力しないでください。";
+
+        p +=
+            "出力は必ず文字データのみとし、マークダウンのコードブロック形式（```）を用いてください。";
 
         p +=
             "画像を生成することはしないでください。\n\n";
@@ -2189,7 +2258,7 @@
             "一括コピー可能な状態の";
 
         p +=
-            "『英語テキストプロンプト（文字列）』のみを";
+            "英語を基本としたテキストプロンプトのみを";
 
         p +=
             "コードブロック形式（```）で出力してください。";
