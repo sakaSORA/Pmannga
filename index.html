@@ -286,6 +286,45 @@
             font-weight: bold;
         }
 
+        .quick-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        .mode-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .mode-btn {
+            background-color: #444;
+            color: #fff;
+            border: 1px solid var(--border-color);
+            min-height: 48px;
+            padding: 8px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: var(--font-family);
+            font-size: 0.86rem;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .mode-btn.active {
+            background-color: #1b4d3e;
+            color: var(--accent-active);
+            border-color: var(--accent-active);
+        }
+
+        .hint-text {
+            color: #c8c8c8;
+            font-size: 0.78rem;
+            line-height: 1.45;
+            margin-top: 6px;
+        }
+
         .management-area {
             display: flex;
             flex-direction: column;
@@ -662,6 +701,55 @@
 
         <fieldset>
 
+            <legend>🎯 まず作りたいものを選ぶ</legend>
+
+            <div class="quick-grid">
+
+                <div class="form-group" style="margin-bottom:0;">
+                    <label>出力タイプ：</label>
+
+                    <div class="mode-grid">
+                        <button
+                            type="button"
+                            class="mode-btn"
+                            id="mode_assist"
+                            onclick="selectOutputMode('assist')"
+                        >
+                            AIチャットで補完
+                        </button>
+
+                        <button
+                            type="button"
+                            class="mode-btn"
+                            id="mode_direct"
+                            onclick="selectOutputMode('direct')"
+                        >
+                            画像AIへ直接
+                        </button>
+                    </div>
+
+                    <div class="hint-text" id="outputModeHint"></div>
+                </div>
+
+                <div class="form-group" style="margin-bottom:0;">
+                    <label for="visual_type">作りたい画像：</label>
+                    <select id="visual_type"></select>
+                </div>
+
+                <div class="form-group" style="margin-bottom:0;">
+                    <label for="text_mode">画像内文字：</label>
+                    <select id="text_mode"></select>
+                    <div class="hint-text">
+                        手軽さ優先なので「文字あり」が初期値です。崩れが気になる時だけ、文字スペースありに切り替えます。
+                    </div>
+                </div>
+
+            </div>
+
+        </fieldset>
+
+        <fieldset>
+
             <legend>
                 <span class="legend-with-action">
                     <span>★ 世界観・スタイルの設定</span>
@@ -933,9 +1021,9 @@
             <button
                 type="button"
                 class="main-btn"
-                onclick="generateGeminiPrompt()"
+                onclick="generatePrompt()"
             >
-                AI専用の指示書（プロンプト）を生成する！
+                プロンプトを生成する！
             </button>
 
         </div>
@@ -951,7 +1039,7 @@
         <div class="modal-header">
 
             <div class="modal-title">
-                生成完了：AI用指示書
+                生成完了：プロンプト
             </div>
 
             <button
@@ -1155,6 +1243,46 @@
             "Left-to-right ordering within any row is forbidden."
     };
 
+    const DATA_VISUAL_TYPE = {
+
+        "一枚絵・キービジュアル":
+            "single polished key visual illustration, one strong memorable composition, cinematic poster-like impact",
+
+        "漫画雑誌の表紙":
+            "Japanese manga magazine cover design, bold cover composition, energetic typography areas, rich visual information",
+
+        "連載扉絵・カラー扉":
+            "opening color page for a manga chapter, decorative title-page composition, emotional character-focused illustration",
+
+        "縦長ポスター":
+            "tall vertical poster composition, dramatic full-page layout, strong top-to-bottom visual flow",
+
+        "スマホ壁紙":
+            "vertical smartphone wallpaper composition, clean center focus, attractive negative space, immersive background",
+
+        "SNS告知画像":
+            "social media announcement visual, eye-catching central subject, readable promotional composition",
+
+        "4コマ漫画":
+            "simple vertical four-panel manga page, clear panel separation, easy-to-follow short gag or emotional beat",
+
+        "縦読み漫画ページ":
+            "vertical scrolling webtoon-like manga page, stacked panels, clear gutters, top-to-bottom reading flow"
+    };
+
+    const DATA_TEXT_MODE = {
+
+        "文字あり（手軽・雰囲気重視）":
+            "Include bold Japanese title lettering, catch copy, decorative captions, and expressive hand-painted manga typography as part of the visual design. Slightly imperfect generated text is acceptable if the overall mood and impact are strong.",
+
+        "文字スペースあり（後から文字入れ）":
+            "Leave attractive clean empty spaces for a title, captions, and small cover text. Do not render readable letters, logos, captions, or speech text inside the image.",
+
+        "文字なし":
+            "No text, no letters, no captions, no logo, no typography, no speech bubble text inside the image."
+    };
+
+    let currentOutputMode = "assist";
     let currentColorMode = "";
     const DRAFT_KEY = 'manga_prompt_draft';
     let draftSaveTimer = null;
@@ -1175,8 +1303,26 @@
             Object.keys(DATA_LAYOUT)
         );
 
+        initSelectOptions(
+            'visual_type',
+            Object.keys(DATA_VISUAL_TYPE)
+        );
+
+        initSelectOptions(
+            'text_mode',
+            Object.keys(DATA_TEXT_MODE)
+        );
+
         document.getElementById('panel_layout').value =
             "4コマ構成（縦並び・おすすめ！）";
+
+        document.getElementById('visual_type').value =
+            "一枚絵・キービジュアル";
+
+        document.getElementById('text_mode').value =
+            "文字あり（手軽・雰囲気重視）";
+
+        setOutputMode("assist");
 
         restoreDraft();
 
@@ -1186,7 +1332,7 @@
         syncTagButtonsWithTextarea();
         requestPersistentStorage();
 
-        ['subject_custom', 'manga_style', 'panel_layout', 'additional_notes', 'dialogues_text']
+        ['subject_custom', 'manga_style', 'panel_layout', 'visual_type', 'text_mode', 'additional_notes', 'dialogues_text']
             .forEach(id => {
                 const element = document.getElementById(id);
                 element?.addEventListener('input', scheduleDraftSave);
@@ -1264,6 +1410,39 @@
 
             select.appendChild(opt);
         });
+    }
+
+    // =========================================================
+    // 出力タイプ
+    // =========================================================
+
+    function setOutputMode(mode) {
+
+        currentOutputMode = mode === "direct" ? "direct" : "assist";
+
+        document
+            .getElementById('mode_assist')
+            .classList
+            .toggle('active', currentOutputMode === 'assist');
+
+        document
+            .getElementById('mode_direct')
+            .classList
+            .toggle('active', currentOutputMode === 'direct');
+
+        const hint = document.getElementById('outputModeHint');
+
+        if (hint) {
+            hint.textContent =
+                currentOutputMode === 'assist'
+                    ? 'AIチャットに投げて、足りない演出や背景をふくらませてもらうモードです。'
+                    : '画像生成AIへそのまま貼る短めのプロンプトを作るモードです。';
+        }
+    }
+
+    function selectOutputMode(mode) {
+        setOutputMode(mode);
+        scheduleDraftSave();
     }
 
     // =========================================================
@@ -1817,11 +1996,20 @@
             layout:
                 document.getElementById('panel_layout').value,
 
+            visualType:
+                document.getElementById('visual_type').value,
+
+            textMode:
+                document.getElementById('text_mode').value,
+
             notes:
                 document.getElementById('additional_notes').value,
 
             dialogues:
                 document.getElementById('dialogues_text').value,
+
+            outputMode:
+                currentOutputMode,
 
             colorMode:
                 currentColorMode
@@ -1902,12 +2090,23 @@
                 ? d.layout
                 : "4コマ構成（縦並び・おすすめ！）";
 
+        document.getElementById('visual_type').value =
+            Object.prototype.hasOwnProperty.call(DATA_VISUAL_TYPE, d.visualType)
+                ? d.visualType
+                : "一枚絵・キービジュアル";
+
+        document.getElementById('text_mode').value =
+            Object.prototype.hasOwnProperty.call(DATA_TEXT_MODE, d.textMode)
+                ? d.textMode
+                : "文字あり（手軽・雰囲気重視）";
+
         document.getElementById('additional_notes').value =
             d.notes || '';
 
         document.getElementById('dialogues_text').value =
             d.dialogues || '';
 
+        setOutputMode(d.outputMode || "assist");
         setColorMode(d.colorMode || "");
 
         syncTagButtonsWithTextarea();
@@ -1992,7 +2191,7 @@
     // プロンプト生成
     // =========================================================
 
-    function generateGeminiPrompt() {
+    function getPromptParts() {
 
         const subject =
             document
@@ -2001,12 +2200,8 @@
                 .trim();
 
         if (!subject) {
-
-            alert(
-                "登場人物やキャラクター設定を入力してください。"
-            );
-
-            return;
+            alert("登場人物やキャラクター設定を入力してください。");
+            return null;
         }
 
         const styleKey =
@@ -2015,259 +2210,153 @@
         const baseStyle =
             DATA_STYLE[styleKey] || styleKey;
 
-        // カラー指示が先頭側(前方優先)に来るよう文字列を組み立てる
         let style = "";
 
         if (currentColorMode === 'color') {
-
-            style +=
+            style =
                 "vibrant full color manga illustration, professionally colored, rich and beautiful color palette, " + baseStyle;
-
         } else if (currentColorMode === 'mono') {
-
-            style +=
-                "monochrome, black and white manga page, sharp ink lines, professional screentones, highly detailed hand-drawn manga ink art, " + baseStyle;
-
+            style =
+                "monochrome black and white manga art, sharp ink lines, professional screentones, " + baseStyle;
         } else {
-
-            style += baseStyle;
+            style = baseStyle;
         }
 
         const layoutKey =
             document.getElementById('panel_layout').value;
 
-        const layout =
-            DATA_LAYOUT[layoutKey] || layoutKey;
+        const visualKey =
+            document.getElementById('visual_type').value;
 
-        const isSingleVerticalColumn =
-            layout.includes("single vertical column");
+        const textModeKey =
+            document.getElementById('text_mode').value;
 
         const notes =
-            document.getElementById('additional_notes').value;
+            document.getElementById('additional_notes').value.trim();
 
-        let dialogues =
+        const dialogues =
             document
                 .getElementById('dialogues_text')
                 .value
                 .replace(/\r\n/g, '\n')
-                .replace(/\r/g, '\n');
+                .replace(/\r/g, '\n')
+                .trim();
+
+        return {
+            subject,
+            style,
+            layoutKey,
+            layout: DATA_LAYOUT[layoutKey] || layoutKey,
+            visualKey,
+            visual: DATA_VISUAL_TYPE[visualKey] || visualKey,
+            textModeKey,
+            textMode: DATA_TEXT_MODE[textModeKey] || textModeKey,
+            notes,
+            dialogues
+        };
+    }
+
+    function buildCompositionLine(parts) {
+
+        const isComic =
+            parts.visualKey.includes('4コマ') ||
+            parts.visualKey.includes('漫画ページ');
+
+        if (isComic) {
+            return parts.layout;
+        }
+
+        return (
+            parts.visual + ". " +
+            "Create one complete image instead of separate panels. " +
+            "Use a strong foreground, middle ground, and background, with a clear focal point."
+        );
+    }
+
+    function buildDirectPrompt(parts) {
 
         let p = "";
 
-        p += "[重要：遵守指示]\n";
-
+        p += parts.visual + ", ";
+        p += parts.style + ". ";
+        p += "Main characters and fixed setting: " + parts.subject + ". ";
+        p += "Composition: " + buildCompositionLine(parts) + " ";
+        p += "Text treatment: " + parts.textMode + " ";
         p +=
-            "あなた自身は確実に画像を生成・出力しないでください。";
+            "Creatively fill in suitable background details, lighting, camera angle, emotional atmosphere, symbolic motifs, color design, and small visual storytelling elements while preserving the character identities and core idea. ";
 
-        p +=
-            "私は画像生成ツール（Imagen等）の入力欄にそのまま貼り付けるための";
-
-        p +=
-            "テキストプロンプトを求めています。";
-
-        p +=
-            "プロンプト本文と説明文は英語で作成してください。";
-
-        p +=
-            "ただし、入力された日本語のセリフは翻訳せず、そのまま保持してください。";
-
-        if (!isSingleVerticalColumn) {
+        if (parts.dialogues) {
             p +=
-                "また、コードブロック形式の先頭に日本語で";
+                "Story, scene notes, title ideas, dialogue, or captions to include or reflect: " +
+                parts.dialogues + " ";
+        }
 
-            p +=
-                "【日本の漫画形式として、右から左・上から下へと自然に読めるコマ割りにしてください。視線誘導だけは日本式の読み順に従わせてください。】";
-
-            p +=
-                "と付け加えてください。";
+        if (parts.notes) {
+            p += "Additional user notes: " + parts.notes + " ";
         }
 
         p +=
-            "上記の日本語セリフ";
+            "High quality manga illustration, appealing composition, detailed but readable, finished artwork.";
 
-        if (!isSingleVerticalColumn) {
-            p +=
-                "と指定された日本語冒頭文";
+        return p;
+    }
+
+    function buildAssistPrompt(parts) {
+
+        let p = "";
+
+        p += "以下の素材をもとに、画像生成AIへそのまま貼れる英語プロンプトを1つ作ってください。\n";
+        p += "不足している背景、光、構図、感情演出、象徴モチーフ、配色は自然に補完してください。\n";
+        p += "キャラクターの同一性、主題、入力された日本語のセリフやタイトル案は変えないでください。\n";
+        p += "説明や候補リストではなく、完成したプロンプト本文だけを出してください。\n\n";
+
+        p += "【作りたい画像】\n";
+        p += parts.visualKey + "\n\n";
+
+        p += "【画像内文字】\n";
+        p += parts.textModeKey + "\n";
+        p += parts.textMode + "\n\n";
+
+        p += "【キャラクター・主題】\n";
+        p += parts.subject + "\n\n";
+
+        p += "【画風】\n";
+        p += parts.style + "\n\n";
+
+        p += "【構図・ページ構成】\n";
+        p += buildCompositionLine(parts) + "\n\n";
+
+        if (parts.dialogues) {
+            p += "【入れたいセリフ・タイトル案・場面メモ】\n";
+            p += parts.dialogues + "\n\n";
         }
 
-        p +=
-            "以外の日本語は出力しないでください。";
-
-        p +=
-            "出力は必ず文字データのみとし、マークダウンのコードブロック形式（```）を用いてください。";
-
-        p +=
-            "画像を生成することはしないでください。\n\n";
-
-        p +=
-            "あなたはプロの漫画原作者であり、画像生成AIの高度なプロンプトエンジニアです。\n";
-
-        p +=
-            "入力された【登場人物の設定】と【セリフ】の整合性を深く読み解き、";
-
-        p +=
-            "最適な『全体のふんいいき』『配色』『キャラクターのオーラ・内面演出』を";
-
-        p +=
-            "行間に合わせて自動で推測・補完して、";
-
-        p +=
-            "最高品質の指示書を組み立ててください。\n\n";
-
-        p +=
-            "【必須要件A・コマ形状のルール】（読み順とは独立した別ルール）\n";
-
-        p +=
-            "- 各ページのコマサイズは均等・同一グリッド（等分割）を禁止とする。\n";
-
-        p +=
-            "- 大ゴマ・中コマ・小コマを演出・重要度に応じて必ず混在させること。\n";
-
-        p +=
-            "- 均等な十字分割やただの格子状分割（アメリカ式等幅グリッド）は、4コマ指定を除き絶対禁止。\n";
-
-        p +=
-            "- 指定されたコマ構成（5〜7コマ、大ゴマ＋小コマ等）の形状指定を最優先で遵守すること。\n\n";
-
-        p +=
-            "- 個別のコマ構成指定と本共通ルールが矛盾する場合は、本共通ルールを優先すること。\n\n";
-
-        p +=
-            "【必須要件B・読み順のルール】（コマ形状とは完全に独立したルール）\n";
-
-        p +=
-            "- 日本の漫画は『右綴じ（right-binding）』形式。コマ形状にかかわらず、各段の読み順は必ず右コマ→左コマを維持すること。\n";
-
-        p +=
-            "- 各段（row）の中で、右側のコマが左側のコマより先に読まれる配置にすること。\n";
-
-        p +=
-            "- 『アメコミ式（左→右）』は全段において禁止。1段目だけでなく2段目・3段目以降も例外なく右優先を維持すること。\n";
-
-        p +=
-            "- 例：右に大ゴマ・左に小コマの場合 → 大ゴマ（右）を先に読み、小コマ（左）を後に読む。\n";
-
-        p +=
-            "- コマ番号：[1]=1段目・右, [2]=1段目・左, [3]=2段目・右, [4]=2段目・左 … 右→左→次の段の順。\n\n";
-
-                p +=
-            "【出力に関するお願い】\n";
-
-        p +=
-            "作成した英語プロンプトは、";
-
-        p +=
-            "各コマごとにバラバラに分離して分割出力することをしないでください。";
-
-        p +=
-            "ユーザーが1クリックで画像生成AIへそのまままとめて投入できるよう、";
-
-        p +=
-            "必ず「ページ全体の指示を1つに統合した、";
-
-        p +=
-            "一括でコピー可能な状態の英語プロンプト」として";
-
-        p +=
-            "1つにまとめて完成させて出力してください。\n\n";
-
-        p +=
-            "【全ページ共通設定 (キャラクター・世界観の一貫性保証)】\n";
-
-        p +=
-            `・登場人物・主人公設定: ${subject}\n`;
-
-        p +=
-            `・全体画風（スタイル）: ${style}\n\n`;
-
-        p +=
-            "※上記特徴（服装、髪型、色彩、顔の傾向など）は、";
-
-        p +=
-            "プロンプト内でブレずに共通して";
-
-        p +=
-            "シームレスに描写されるように";
-
-        p +=
-            "英文プロンプトを固定・調整してください。\n\n";
-
-        p +=
-            "--------------------------------------------------------\n";
-
-        p +=
-            "【各ページの個別構成データ】\n";
-
-        p +=
-            "--------------------------------------------------------\n";
-
-        p +=
-            "■ 第 1 ページ目\n";
-
-        p +=
-            `  ・コマ構成指定: ${layout}\n`;
-
-        if (dialogues.trim()) {
-
-            p +=
-                "  ・組み込んでほしいセリフ・会話（※日本語のままで処理すること）:\n";
-
-            p +=
-                "    [重要] 以下のセリフは";
-
-            p +=
-                "キャラクターの口調や方言、語気のニュアンスを完璧に保持するため、";
-
-            p +=
-                "確実に英語に翻訳しないでください。";
-
-            p +=
-                "生成される英語プロンプト内の吹き出し指定";
-
-            p +=
-                "（speech bubble内の指定テキストなど）には、";
-
-            p +=
-                "以下の日本語表現をそのままの表記で";
-
-            p +=
-                "正確に配置させてください。\n";
-
-            p +=
-                `    ${dialogues}\n`;
+        if (parts.notes) {
+            p += "【追加メモ】\n";
+            p += parts.notes + "\n\n";
         }
 
-        if (notes.trim()) {
+        p += "【仕上げの方向性】\n";
+        p += "手軽に見栄えのする、完成度の高い漫画・アニメ調ビジュアルにしてください。";
 
-            p +=
-                `  ・このページの個別補足指示（画面サイズ・アスペクト比など）: ${notes}\n`;
-        }
+        return p;
+    }
 
-        p += "\n";
+    function generatePrompt() {
 
-        p +=
-            "[最終確認]\n";
+        const parts = getPromptParts();
+        if (!parts) return;
 
-        p +=
-            "繰り返します。";
+        const prompt =
+            currentOutputMode === "direct"
+                ? buildDirectPrompt(parts)
+                : buildAssistPrompt(parts);
 
-        p +=
-            "画像の出力は完全に不要です。";
-
-        p +=
-            "一括コピー可能な状態の";
-
-        p +=
-            "英語を基本としたテキストプロンプトのみを";
-
-        p +=
-            "コードブロック形式（```）で出力してください。";
-
-        document.getElementById('outputText').value = p;
+        document.getElementById('outputText').value = prompt;
 
         openModal();
 
-        autoSaveHistory(subject);
+        autoSaveHistory(parts.subject);
         saveDraft();
     }
 

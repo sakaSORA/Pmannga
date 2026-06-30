@@ -1,4 +1,4 @@
-const CACHE_NAME = 'manga-prompt-pwa-v18';
+const CACHE_NAME = 'manga-prompt-pwa-v17';
 const ASSETS = [
   './',
   './index.html',
