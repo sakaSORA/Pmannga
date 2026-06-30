@@ -1273,7 +1273,7 @@
     const DATA_TEXT_MODE = {
 
         "文字あり（手軽・雰囲気重視）":
-            "Include bold Japanese title lettering, catch copy, decorative captions, and expressive hand-painted manga typography as part of the visual design. Slightly imperfect generated text is acceptable if the overall mood and impact are strong.",
+            "Include bold Japanese title lettering or catch copy only when it is explicitly requested as visible text. Use expressive hand-painted manga typography as part of the visual design. Do not turn character profiles, place notes, time notes, mood notes, or setting labels into printed text.",
 
         "文字スペースあり（後から文字入れ）":
             "Leave attractive clean empty spaces for a title, captions, and small cover text. Do not render readable letters, logos, captions, or speech text inside the image.",
@@ -2273,26 +2273,76 @@
         );
     }
 
+    function getVisibleTextCandidates(text) {
+
+        if (!text) return [];
+
+        const matches = [];
+        const pattern = /「([^」]+)」/g;
+        let match;
+
+        while ((match = pattern.exec(text)) !== null) {
+            const value = match[1].trim();
+            if (value && !matches.includes(value)) {
+                matches.push(value);
+            }
+        }
+
+        return matches;
+    }
+
+    function getTextControlLine(parts) {
+
+        if (parts.textModeKey === "文字なし") {
+            return (
+                "No visible text at all. Do not render character names, profile notes, place labels, time labels, mood labels, captions, logos, signs, or any readable letters."
+            );
+        }
+
+        if (parts.textModeKey === "文字スペースあり（後から文字入れ）") {
+            return (
+                "Leave attractive blank spaces for later typography. Do not render any readable text, labels, character names, profile notes, place notes, time notes, captions, logos, or signs."
+            );
+        }
+
+        const candidates =
+            getVisibleTextCandidates(parts.dialogues);
+
+        if (candidates.length > 0) {
+            return (
+                "Visible text is allowed only for these exact Japanese phrases: " +
+                candidates.map(text => `「${text}」`).join(" / ") +
+                ". Do not render any other readable Japanese or English text. " +
+                "Never print character profiles, place/time/mood labels, setting notes, prompt labels, or explanatory metadata."
+            );
+        }
+
+        return (
+            "Visible text is allowed only as a short decorative title or catch copy inferred from the main theme. Do not render character profiles, place/time/mood labels, setting notes, prompt labels, or explanatory metadata."
+        );
+    }
+
     function buildDirectPrompt(parts) {
 
         let p = "";
 
         p += parts.visual + ", ";
         p += parts.style + ". ";
-        p += "Main characters and fixed setting: " + parts.subject + ". ";
+        p += "Visual reference only, never printed as text: " + parts.subject + ". ";
         p += "Composition: " + buildCompositionLine(parts) + " ";
         p += "Text treatment: " + parts.textMode + " ";
+        p += getTextControlLine(parts) + " ";
         p +=
             "Creatively fill in suitable background details, lighting, camera angle, emotional atmosphere, symbolic motifs, color design, and small visual storytelling elements while preserving the character identities and core idea. ";
 
         if (parts.dialogues) {
             p +=
-                "Story, scene notes, title ideas, dialogue, or captions to include or reflect: " +
+                "Scene and story reference only unless a phrase is listed above as visible text: " +
                 parts.dialogues + " ";
         }
 
         if (parts.notes) {
-            p += "Additional user notes: " + parts.notes + " ";
+            p += "Additional visual reference only, never printed as text: " + parts.notes + " ";
         }
 
         p +=
@@ -2308,6 +2358,8 @@
         p += "以下の素材をもとに、画像生成AIへそのまま貼れる英語プロンプトを1つ作ってください。\n";
         p += "不足している背景、光、構図、感情演出、象徴モチーフ、配色は自然に補完してください。\n";
         p += "キャラクターの同一性、主題、入力された日本語のセリフやタイトル案は変えないでください。\n";
+        p += "画像内に描いてよい文字と、絵の参考にするだけの設定メモを必ず分けてください。\n";
+        p += "キャラクター設定、場所、時間、雰囲気、プロンプト上の見出しや説明文を、画像内の注釈・小見出し・看板として描かせないでください。\n";
         p += "説明や候補リストではなく、完成したプロンプト本文だけを出してください。\n\n";
 
         p += "【作りたい画像】\n";
@@ -2317,7 +2369,11 @@
         p += parts.textModeKey + "\n";
         p += parts.textMode + "\n\n";
 
+        p += "【画像内に表示してよい文字の制限】\n";
+        p += getTextControlLine(parts) + "\n\n";
+
         p += "【キャラクター・主題】\n";
+        p += "※これは絵の参考情報です。画像内の文字として描かせないでください。\n";
         p += parts.subject + "\n\n";
 
         p += "【画風】\n";
@@ -2328,11 +2384,13 @@
 
         if (parts.dialogues) {
             p += "【入れたいセリフ・タイトル案・場面メモ】\n";
+            p += "※「」内の言葉だけを表示候補にし、それ以外は場面理解の参考にしてください。\n";
             p += parts.dialogues + "\n\n";
         }
 
         if (parts.notes) {
             p += "【追加メモ】\n";
+            p += "※これは絵の参考情報です。画像内の文字として描かせないでください。\n";
             p += parts.notes + "\n\n";
         }
 
